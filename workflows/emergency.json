@@ -1,0 +1,139 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sos",
+        "options": {
+          "responseCode": 200,
+          "responseData": "firstEntryJson"
+        }
+      },
+      "name": "SOSWebhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "emergencyType": "={{$json.emergencyType || 'medical'}}",
+        "location": "={{$json.location}}",
+        "priority": "={{$json.priority || 'high'}}",
+        "description": "={{$json.description}}"
+      },
+      "name": "SOSAlert",
+      "type": "sosAlert",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Charger le service de sélection des contacts\nconst { ContactService } = require('../services/ContactService');\n\n// Créer une instance du service\nconst contactService = new ContactService('https://api.sos-service.com', 'NEXT_PUBLIC_N8N_API_KEY);\n\n// Extraire les données de l'alerte\nconst { emergencyType, location, priority, vehicleId } = items[0].json;\n\n// Critères de sélection\nconst criteria = {\n  emergencyType,\n  location,\n  priority,\n  vehicleId\n};\n\n// Sélectionner les contacts appropriés\nconst selectedContacts = await contactService.selectContactsForEmergency(criteria);\n\n// Retourner les contacts sélectionnés\nreturn [{ json: { selectedContacts } }];\n"
+      },
+      "name": "Contact Selection",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Charger le service d'alerte\nconst { AlertService } = require('../services/AlertService');\n\n// Créer une instance du service\nconst alertService = new AlertService('https://api.sos-service.com', 'NEXT_PUBLIC_N8N_API_KEY');\n\n// Récupérer les contacts sélectionnés\nconst { selectedContacts } = items[0].json;\nconst { emergencyType, location, description, vehicleId } = $node[\"SOSAlert\"].json;\n\n// Construire le message d'alerte\nconst message = `ALERTE SOS: ${emergencyType.toUpperCase()}\\n` +\n               `Localisation: ${location}\\n` +\n               `Description: ${description}\\n` +\n               `ID Véhicule: ${vehicleId || 'Non spécifié'}\\n` + \n               `Horodatage: ${new Date().toLocaleString('fr-FR')}`;\n\n// Options d'alerte\nconst alertOptions = {\n  message,\n  priority: 'high',\n  channels: ['sms', 'email', 'call', 'app']\n};\n\n// Envoyer l'alerte à tous les contacts sélectionnés\nconst alertResults = [];\nfor (const contact of selectedContacts) {\n  const result = await alertService.alertContact(contact, alertOptions);\n  alertResults.push({\n    contactId: contact.id,\n    contactName: contact.name,\n    ...result\n  });\n}\n\nreturn [{ json: { alertResults } }];\n"
+      },
+      "name": "Send Alerts",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "message": "={{$node[\"Send Alerts\"].json.alertResults.filter(r => r.success).length}} contacts ont été alertés avec succès sur {{$node[\"Contact Selection\"].json.selectedContacts.length}} contacts sélectionnés"
+      },
+      "name": "Alert Summary",
+      "type": "n8n-nodes-base.notification",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "SOSWebhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SOSWebhook": {
+      "main": [
+        [
+          {
+            "node": "SOSAlert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SOSAlert": {
+      "main": [
+        [
+          {
+            "node": "Contact Selection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Selection": {
+      "main": [
+        [
+          {
+            "node": "Send Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Alerts": {
+      "main": [
+        [
+          {
+            "node": "Alert Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
