@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/Tabs';
 import { useToast } from '../components/UseToast';
 import { Separator } from '../components/Separator';
 import { config as defaultConfig } from '../lib/config';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '../components/AlertDialog';
 import { Check, Save, Undo, ArrowLeft, AlertTriangle } from 'lucide-react';
 
 export default function ConfigPage() {
@@ -152,27 +152,24 @@ export default function ConfigPage() {
           <h1 className="text-3xl font-bold">Configuration</h1>
           <div className="flex items-center space-x-2">
             <Button
-              variant="ghost"
-              onClick={() => router.back()}
-            >
+                          variant="ghost"
+                          onClick={() => router.back()}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Button>
             
             <Button
-              variant="outline"
-              onClick={resetConfig}
-              disabled={!hasChanges}
-            >
+                          variant="outline"
+                          onClick={resetConfig}
+                          disabled={!hasChanges}>
               <Undo className="h-4 w-4 mr-2" />
               Annuler
             </Button>
             
             <Button
-              variant="default"
-              onClick={saveConfig}
-              disabled={!hasChanges}
-            >
+                          variant="default"
+                          onClick={saveConfig}
+                          disabled={!hasChanges}>
               <Save className="h-4 w-4 mr-2" />
               Enregistrer
             </Button>
@@ -200,7 +197,7 @@ export default function ConfigPage() {
                     <Label htmlFor="n8nApiUrl">URL de l'API n8n</Label>
                     <Input
                       id="n8nApiUrl"
-                      placeholder="http://localhost:5678/api/v1"
+                      placeholder="https://noeplantier.app.n8n.cloud/webhook/6f7b288e-1efe-4504-a6fd-660931327269"
                       value={tempConfig.n8nApiUrl}
                       onChange={(e) => updateConfig(['n8nApiUrl'], e.target.value)}
                     />
@@ -227,7 +224,7 @@ export default function ConfigPage() {
                     <Label htmlFor="sosWebhookUrl">URL du webhook SOS</Label>
                     <Input
                       id="sosWebhookUrl"
-                      placeholder="http://localhost:5678/webhook/sos"
+                      placeholder="https://noeplantier.app.n8n.cloud/webhook/6f7b288e-1efe-4504-a6fd-660931327269"
                       value={tempConfig.sosWebhookUrl}
                       onChange={(e) => updateConfig(['sosWebhookUrl'], e.target.value)}
                     />

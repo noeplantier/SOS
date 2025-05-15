@@ -74,14 +74,14 @@ function getEnv(key: string, defaultValue: string): string {
 export const config: Config = {
   // Configuration de l'API n8n
   n8nApiUrl: getEnv('N8N_API_URL', isDevelopment 
-    ? 'http://localhost:5678/api/v1' 
+    ? 'https://noeplantier.app.n8n.cloud/webhook/6f7b288e-1efe-4504-a6fd-660931327269' 
     : 'https://n8n.sos-service.com/api/v1'),
     
   n8nApiKey: getEnv('N8N_API_KEY', ''),
   
   // URL du webhook pour les alertes SOS
   sosWebhookUrl: getEnv('SOS_WEBHOOK_URL', isDevelopment 
-    ? 'http://localhost:5678/webhook/sos' 
+    ? 'https://noeplantier.app.n8n.cloud/webhook/6f7b288e-1efe-4504-a6fd-660931327269' 
     : 'https://n8n.sos-service.com/webhook/sos'),
   
   // Intervalles de rafraîchissement

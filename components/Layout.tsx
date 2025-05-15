@@ -38,10 +38,9 @@ export function Layout({ children }: LayoutProps) {
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-bold">SOS System</h2>
             <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setSidebarOpen(false)}
-            >
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setSidebarOpen(false)}            >
               <X className="h-5 w-5" />
             </Button>
           </div>
@@ -55,9 +54,8 @@ export function Layout({ children }: LayoutProps) {
                   onClick={() => setSidebarOpen(false)}
                 >
                   <Button
-                    variant={isActive(item.href) ? "default" : "ghost"}
-                    className="w-full justify-start"
-                  >
+                          variant={isActive(item.href) ? "default" : "ghost"}
+                          className="w-full justify-start"                  >
                     <Icon className="h-4 w-4 mr-2" />
                     {item.label}
                   </Button>
@@ -67,10 +65,9 @@ export function Layout({ children }: LayoutProps) {
           </nav>
           <div className="absolute bottom-6 left-6 right-6">
             <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              asChild
-            >
+                          variant="outline"
+                          className="w-full justify-start"
+                          asChild            >
               <Link href="/help">
                 <LifeBuoy className="h-4 w-4 mr-2" />
                 Aide & Support
@@ -90,9 +87,8 @@ export function Layout({ children }: LayoutProps) {
               return (
                 <Link key={item.href} href={item.href}>
                   <Button
-                    variant={isActive(item.href) ? "default" : "ghost"}
-                    className="w-full justify-start"
-                  >
+                          variant={isActive(item.href) ? "default" : "ghost"}
+                          className="w-full justify-start"                  >
                     <Icon className="h-4 w-4 mr-2" />
                     {item.label}
                   </Button>
@@ -101,10 +97,9 @@ export function Layout({ children }: LayoutProps) {
             })}
           </nav>
           <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            asChild
-          >
+                      variant="outline"
+                      className="w-full justify-start"
+                      asChild          >
             <Link href="/help">
               <LifeBuoy className="h-4 w-4 mr-2" />
               Aide & Support
@@ -119,10 +114,9 @@ export function Layout({ children }: LayoutProps) {
         <div className="sticky top-0 z-10 flex items-center justify-between border-b h-16 px-6 bg-background lg:hidden">
           <h2 className="text-lg font-bold">SOS System</h2>
           <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(true)}
-          >
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setSidebarOpen(true)}          >
             <Menu className="h-5 w-5" />
           </Button>
         </div>

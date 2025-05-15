@@ -70,11 +70,10 @@ export default function N8nPage() {
               </Badge>
             )}
             <Button 
-              variant="outline" 
+              variant="outline"
               size="icon"
               onClick={() => loadWorkflows()}
-              disabled={isLoading}
-            >
+              disabled={isLoading}>
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
