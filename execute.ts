@@ -124,4 +124,4 @@ export class SOSAlert implements INodeType {
 
         return [returnData];
     }
-}s
+}
