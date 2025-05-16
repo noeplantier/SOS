@@ -1,33 +1,12 @@
-import { useEffect } from 'react';
+import type { AppProps } from 'next/app';
+import { Toaster } from './components/Toaster';
+import '../styles/globals.css'; // Importez votre CSS global ici
 
-declare global {
-  interface Window {
-    workbox?: unknown;
-  }
+export default function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <>
+      <Component {...pageProps} />
+      <Toaster />
+    </>
+  );
 }
-
-function MyApp({ Component, pageProps }) {
-  // Enregistrement du Service Worker
-  useEffect(() => {
-    if (
-      typeof window !== 'undefined' &&
-      'serviceWorker' in navigator &&
-      window.workbox !== undefined &&
-      process.env.NODE_ENV === 'production'
-    ) {
-      // Enregistrer le Service Worker
-      navigator.serviceWorker
-        .register('/bfcache-sw.js')
-        .then(registration => {
-          console.log('Service Worker enregistré avec succès:', registration);
-        })
-        .catch(error => {
-          console.error('Erreur lors de l\'enregistrement du Service Worker:', error);
-        });
-    }
-  }, []);
-
-  return <Component {...pageProps} />;
-}
-
-export default MyApp;

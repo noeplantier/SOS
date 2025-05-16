@@ -2,7 +2,7 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js",
+  "/config": "pages/config.js",
   "/n8n": "pages/n8n.js",
-  "/config": "pages/config.js"
+  "/": "pages/index.js"
 }

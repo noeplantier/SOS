@@ -28,11 +28,6 @@ self.__BUILD_MANIFEST = {
       "static/chunks/webpack.js",
       "static/chunks/main.js",
       "static/chunks/pages/config.js"
-    ],
-    "/n8n": [
-      "static/chunks/webpack.js",
-      "static/chunks/main.js",
-      "static/chunks/pages/n8n.js"
     ]
   },
   "ampFirstPages": []
