@@ -3,7 +3,7 @@ export const config = {
   n8nApiUrl: process.env.NEXT_PUBLIC_N8N_API_URL || "http://localhost:5678",
   
   // Clé API n8n
-  n8nApiKey: process.env.NEXT_PUBLIC_N8N_API_KEY || "",
+  n8nApiKey: process.env.NEXT_PUBLIC_N8N_API_KEY || "FngI9AAIiVzaGXGporKPZ1SgDDHrneyAHkrEqlCdCwCQHlAW2TmxUjNRClcd9nb7s",
   
   // URL du webhook SOS
   sosWebhookUrl: process.env.NEXT_PUBLIC_SOS_WEBHOOK_URL || "https://noeplantier.app.n8n.cloud/webhook/6f7b288e-1efe-4504-a6fd-660931327269",
