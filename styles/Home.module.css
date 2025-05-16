@@ -19,7 +19,7 @@
 /* Section hero */
 .hero {
   padding: 4rem 0;
-  background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+  background: linear-gradient(135deg, #000000 0%, #9c0d17 100%);
   color: white;
   text-align: center;
   border-radius: 0 0 2rem 2rem;
@@ -45,7 +45,7 @@
 }
 
 .heroTitle {
-  font-size: 3rem;
+  font-size: 5rem;
   font-weight: 700;
   margin-bottom: 1rem;
   letter-spacing: -0.025em;
@@ -53,7 +53,7 @@
 }
 
 .heroSubtitle {
-  font-size: 1.25rem;
+  font-size: 2rem;
   margin-bottom: 2rem;
   max-width: 600px;
   margin-left: auto;
@@ -355,14 +355,6 @@
   text-align: center;
 }
 
-.sosContainer {
-  background-color: rgba(230, 57, 70, 0.05);
-  border-radius: 1rem;
-  padding: 3rem 1.5rem;
-  margin: 0 auto;
-  max-width: 42rem;
-  box-shadow: 0 4px 6px rgba(230, 57, 70, 0.1);
-}
 
 .sosTitle {
   font-size: 1.5rem;
@@ -384,12 +376,12 @@
   width: 8rem;
   height: 8rem;
   border-radius: 9999px;
-  background-color: #e63946;
+  background-color: #d60415;
   color: white;
   font-size: 2rem;
   font-weight: 700;
   margin: 0 auto;
-  box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.7);
+  box-shadow: 0 0 0 0 rgba(255, 0, 21, 0.7);
   cursor: pointer;
   animation: pulse 2s infinite;
   transition: background-color 0.2s ease, transform 0.2s ease;

@@ -6,8 +6,10 @@ import { useRouter } from 'next/router';
 import styles from '../styles/Home.module.css';
 import { Bell, Truck, Shield, Heart, Settings, Activity, Clock, Users, RefreshCw, ArrowRight, AlertTriangle } from 'lucide-react';
 import { config } from '../config';
+import { WorkflowManager } from '../components/WorkflowManager';
+import { WorkflowTrigger } from '../components/WorkflowTrigger';
+import { EmergencyWorkflowBuilder } from '../components/EmergencyWorkflowBuilder';
 
-// Types pour les données
 interface StatsData {
   id: string;
   title: string;
@@ -34,7 +36,6 @@ interface ActionLink {
   href: string;
 }
 
-// Données pour les statistiques
 const statsData: StatsData[] = [
   {
     id: 'active-vehicles',
@@ -66,7 +67,6 @@ const statsData: StatsData[] = [
   }
 ];
 
-// Données pour les alertes récentes
 const recentAlerts: Alert[] = [
   {
     id: 'alert-1',
@@ -97,7 +97,6 @@ const recentAlerts: Alert[] = [
   }
 ];
 
-// Actions rapides
 const quickActions: ActionLink[] = [
   {
     id: 'workflows',
@@ -129,7 +128,6 @@ const quickActions: ActionLink[] = [
   }
 ];
 
-// Mappages pour affichage
 const alertTypeMap = {
   security: {
     name: 'Sécurité',
@@ -166,7 +164,6 @@ const alertStatusMap = {
   }
 };
 
-// Formater la date
 function formatDate(dateString: string) {
   const date = new Date(dateString);
   return new Intl.DateTimeFormat('fr-FR', {
@@ -183,64 +180,41 @@ export default function HomePage() {
   const [systemStatus, setSystemStatus] = useState<'online' | 'degraded' | 'offline'>('online');
   const router = useRouter();
 
-  // Vérifier le statut du système
   useEffect(() => {
     const checkSystemStatus = async () => {
       try {
-        // Simulation d'une vérification d'API
-        const response = await fetch(`${config.n8nApiUrl}/health`, { 
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }).catch(() => ({ ok: false }));
-        
-        if (response.ok) {
-          setSystemStatus('online');
-        } else {
-          setSystemStatus('degraded');
-          showToast('Connectivité limitée', 'Le système fonctionne en mode dégradé.', 'warning');
-        }
-      } catch (error) {
+        const response = await fetch(`${config.n8nApiUrl}/health`, { method: 'GET' }).catch(() => ({ ok: false }));
+        setSystemStatus(response.ok ? 'online' : 'degraded');
+        if (!response.ok) showToast('Connectivité limitée', 'Le système fonctionne en mode dégradé.', 'warning');
+      } catch {
         setSystemStatus('offline');
         showToast('Système hors ligne', 'Impossible de se connecter au serveur.', 'error');
       }
     };
-    
+
     checkSystemStatus();
-    
-    // Vérifier toutes les 60 secondes
     const intervalId = setInterval(checkSystemStatus, 60000);
     return () => clearInterval(intervalId);
   }, []);
 
-  // Simuler le rafraîchissement des données
   const refreshData = async () => {
     if (isRefreshing) return;
-    
     setIsRefreshing(true);
-    
     try {
-      // Simuler un appel API
       await new Promise(resolve => setTimeout(resolve, 1000));
       setLastRefresh(new Date());
       showToast('Données actualisées', 'Les informations ont été mises à jour avec succès.', 'success');
-    } catch (error) {
+    } catch {
       showToast('Erreur de synchronisation', 'Impossible d\'actualiser les données.', 'error');
     } finally {
       setIsRefreshing(false);
     }
   };
 
-  // Fonction simple pour afficher une notification toast
   const showToast = (title: string, message: string, type: 'success' | 'warning' | 'error' | 'info') => {
-    // Dans une implémentation réelle, vous utiliseriez un système de notification
     console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
-    
-    // Vous pourriez implémenter ici une bibliothèque comme react-toastify ou créer votre propre système
   };
 
-  // Fonction pour déclencher une alerte SOS
   const handleSOSClick = () => {
     router.push('/emergency');
   };
@@ -253,13 +227,9 @@ export default function HomePage() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* Barre de navigation */}
       <header className="navbar">
         <div className="container flex justify-between items-center">
-
           <div className="navbar-links">
-            
-            {/* Indicateur de statut du système */}
             <div className={styles.tooltip}>
               <div className={`${styles.statusDot} ${styles[systemStatus]}`}></div>
               <span className={styles.tooltipText}>
@@ -272,7 +242,6 @@ export default function HomePage() {
       </header>
 
       <main className={styles.mainContent}>
-        {/* Hero Section */}
         <section className={styles.hero}>
           <div className={styles.heroBackground}></div>
           <div className="container">
@@ -281,17 +250,25 @@ export default function HomePage() {
               <p className={styles.heroSubtitle}>
                 Plateforme de gestion centralisée des alertes et des interventions d'urgence
               </p>
-              <button 
-                className={styles.primaryButton} 
-                onClick={() => router.push('/emergency')}
-              >
-                Accéder au centre d'urgence
-              </button>
+
+              <section className={styles.sosSection}>
+                <div className="container">
+                  <div className={styles.sosContainer}>
+                    <button 
+                      className={styles.sosButton}
+                      onClick={handleSOSClick}
+                      aria-label="Déclencher une alerte SOS"
+                    >
+                      SOS
+                    </button>
+                  </div>
+                </div>
+              </section>
+
             </div>
           </div>
         </section>
 
-        {/* Stats Section */}
         <section className={styles.statsSection}>
           <div className="container">
             <div className={styles.statsGrid}>
@@ -312,7 +289,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Alerts Section */}
         <section className={styles.alertsSection}>
           <div className="container">
             <div className={styles.sectionHeader}>
@@ -332,38 +308,22 @@ export default function HomePage() {
                 {recentAlerts.map(alert => {
                   const typeInfo = alertTypeMap[alert.type];
                   const statusInfo = alertStatusMap[alert.status];
-                  const AlertIcon = typeInfo.icon;
-                  
                   return (
-                    <div 
-                      key={alert.id} 
-                      className={`${styles.alertCard} ${typeInfo.class}`}
-                      onClick={() => router.push(`/alerts/${alert.id}`)}
-                    >
-                      <div className={`${styles.alertIconWrapper} ${typeInfo.class}`}>
-                        <AlertIcon />
+                    <div key={alert.id} className={`${styles.alertCard} ${typeInfo.class}`}>
+                      <div className={styles.alertHeader}>
+                        <typeInfo.icon className={styles.alertIcon} />
+                        <div>
+                          <div className={styles.alertType}>{typeInfo.name}</div>
+                          <div className={styles.alertLocation}>{alert.location}</div>
+                        </div>
+                        <div className={`${styles.alertStatus} ${statusInfo.class}`}>
+                          {statusInfo.name}
+                        </div>
                       </div>
-                      
-                      <div className={styles.alertContent}>
-                        <div className={styles.alertHeader}>
-                          <div className={styles.alertType}>
-                            {typeInfo.name} - {alert.vehicleId}
-                          </div>
-                          <div className={`${styles.alertStatus} ${statusInfo.class}`}>
-                            {statusInfo.name}
-                          </div>
-                        </div>
-                        
-                        <div className={styles.alertMeta}>
-                          <span>{alert.driverName}</span>
-                          <span>{formatDate(alert.timestamp)}</span>
-                        </div>
-                        
-                        {alert.location && (
-                          <div className="text-xs text-gray-500 mt-2">
-                            📍 {alert.location}
-                          </div>
-                        )}
+                      <div className={styles.alertDetails}>
+                        <p><strong>Véhicule :</strong> {alert.vehicleId}</p>
+                        <p><strong>Chauffeur :</strong> {alert.driverName}</p>
+                        <p><strong>Heure :</strong> {formatDate(alert.timestamp)}</p>
                       </div>
                     </div>
                   );
@@ -373,71 +333,21 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Actions Section */}
-        <section className="section">
+        {/* n8n.io Workflow Section */}
+        <section className={styles.workflowSection}>
           <div className="container">
             <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Actions rapides</h2>
+              <h2 className={styles.sectionTitle}>Interface Workflows (n8n.io)</h2>
+              <p className={styles.sectionSubtitle}>Créez et gérez vos workflows d'automatisation ici</p>
             </div>
             
-            <div className={styles.actionsGrid}>
-              {quickActions.map(action => (
-                <Link href={action.href} key={action.id}>
-                  <div className={styles.actionCard}>
-                    <div className={`${styles.actionIcon} bg-${action.color}-100`}>
-                      <action.icon className={`text-${action.color}-600`} />
-                    </div>
-                    <h3 className={styles.actionTitle}>{action.title}</h3>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* SOS Section */}
-        <section className={styles.sosSection}>
-          <div className="container">
-            <div className={styles.sosContainer}>
-              <h2 className={styles.sosTitle}>Déclenchement d'urgence</h2>
-              <p className={styles.sosDescription}>
-                En cas de situation critique, appuyez sur le bouton SOS pour déclencher une alerte d'urgence et mobiliser immédiatement les équipes d'intervention.
-              </p>
-              
-              <button 
-                className={styles.sosButton}
-                onClick={handleSOSClick}
-                aria-label="Déclencher une alerte SOS"
-              >
-                SOS
-              </button>
-            </div>
+            <EmergencyWorkflowBuilder/>
+            <WorkflowManager/>
+            <WorkflowTrigger selectedContacts={[]}/>
+       
           </div>
         </section>
       </main>
-
-      {/* Footer */}
-      <footer className={styles.footer}>
-        <div className="container">
-          <div className={styles.footerContent}>
-            <div className={styles.footerBrand}>
-              <div className={styles.footerLogo}>SOS</div>
-              <div className={styles.footerTagline}>
-                Système d'Alerte d'Urgence
-              </div>
-            </div>
-            
-            <div className={styles.footerCopyright}>
-              <div className={styles.copyrightText}>
-                &copy; {new Date().getFullYear()} SOS. Tous droits réservés.
-              </div>
-              <div className={styles.versionText}>
-                Version 1.0.0
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
