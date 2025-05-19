@@ -1,17 +1,19 @@
 // pages/emergency.tsx
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import styled from 'styled-components';
-import { Bell, Mail, Phone, User, AlertTriangle } from 'lucide-react';
+import { Bell, Mail, Phone, User, AlertTriangle, PlusCircle } from 'lucide-react';
+import ReactFlow, { Background, Controls, ReactFlowProvider, addEdge, useNodesState, useEdgesState } from 'reactflow';
+import 'reactflow/dist/style.css';
 
 // Styles pour les blocs et le tableau de bord
 const DashboardContainer = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   margin-top: 20px;
-  padding: 50px;
+  padding: 20px;
   background: linear-gradient(135deg, #000000 0%, #9c0d17 100%);
   min-height: 100vh;
 `;
@@ -30,11 +32,27 @@ const Title = styled.h1`
   font-size: 24px;
 `;
 
-const BlockContainer = styled.div`
+const Sidebar = styled.div`
+  width: 250px;
+  background-color: #2a2a2a;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-right: 20px;
+`;
+
+const SidebarButton = styled.button`
+  background-color: #9c0d17;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-top: 20px;
+  align-items: center;
+  justify-content: center;
 `;
 
 const Block = styled.div`
@@ -77,6 +95,41 @@ const Button = styled.button`
   width: 100%;
 `;
 
+const initialNodes = [
+  { id: '1', position: { x: 0, y: 0 }, data: { label: 'Nuclear Alert' } },
+  { id: '2', position: { x: 200, y: 100 }, data: { label: 'Notify Team' } },
+  { id: '3', position: { x: 400, y: 200 }, data: { label: 'Evacuate Area' } },
+];
+
+const initialEdges = [
+  { id: 'e1-2', source: '1', target: '2' },
+  { id: 'e2-3', source: '2', target: '3' },
+];
+
+let id = 0;
+const getId = () => `dndnode_${id++}`;
+
+const DnDFlow = () => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  const onConnect = (params) => setEdges((eds) => addEdge(params, eds));
+
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onConnect={onConnect}
+      fitView
+    >
+      <Background />
+      <Controls />
+    </ReactFlow>
+  );
+};
+
 const EmergencyPage: React.FC = () => {
   const router = useRouter();
   const [blocks, setBlocks] = useState([
@@ -91,95 +144,42 @@ const EmergencyPage: React.FC = () => {
     { id: 'contact3', name: 'Medical Team' },
   ];
 
-  const moveBlock = (dragIndex: number, hoverIndex: number) => {
-    const draggedBlock = blocks[dragIndex];
-    const updatedBlocks = [...blocks];
-    updatedBlocks.splice(dragIndex, 1);
-    updatedBlocks.splice(hoverIndex, 0, draggedBlock);
-    setBlocks(updatedBlocks);
-  };
-
-  const BlockComponent = ({ id, title, icon: Icon, contacts: blockContacts, index }: { id: number; title: string; icon: React.FC<{ className?: string }>; contacts: any[]; index: number }) => {
-    const [{ isDragging }, drag] = useDrag({
-      type: 'BLOCK',
-      item: { id, index },
-      collect: (monitor) => ({
-        isDragging: !!monitor.isDragging(),
-      }),
-    });
-
-    const [, drop] = useDrop({
-      accept: 'BLOCK',
-      hover: (draggedItem: { index: number }) => {
-        if (draggedItem.index !== index) {
-          moveBlock(draggedItem.index, index);
-          draggedItem.index = index;
-        }
-      },
-    });
-
-    const [message, setMessage] = useState('');
-    const [selectedContacts, setSelectedContacts] = useState<string[]>(blockContacts);
-
-    const handleContactChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const options = e.target.options;
-      const selected: string[] = [];
-      for (let i = 0; i < options.length; i++) {
-        if (options[i].selected) {
-          selected.push(options[i].value);
-        }
-      }
-      setSelectedContacts(selected);
+  const addBlock = (type: string) => {
+    const newBlock = {
+      id: blocks.length + 1,
+      title: type,
+      icon: type === 'Nuclear Alert' ? AlertTriangle : type === 'Notify Team' ? Bell : User,
+      contacts: [],
+      message: '',
     };
-
-    const handleSendAlert = () => {
-      alert(`Sending alert to ${selectedContacts.join(', ')}: ${message}`);
-    };
-
-    const ref = React.useRef<HTMLDivElement>(null);
-    drag(drop(ref));
-
-    return (
-      <Block ref={ref} style={{ opacity: isDragging ? 0.5 : 1 }}>
-        <BlockHeader>
-          <h3><Icon /> {title}</h3>
-        </BlockHeader>
-        <BlockContent>
-          <ContactList multiple value={selectedContacts} onChange={handleContactChange}>
-            {contacts.map(contact => (
-              <option key={contact.id} value={contact.id}>{contact.name}</option>
-            ))}
-          </ContactList>
-          <textarea
-            placeholder="Type your emergency message here..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            style={{ width: '100%', marginTop: '10px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-          />
-          <Button onClick={handleSendAlert}>Send Alert</Button>
-        </BlockContent>
-      </Block>
-    );
+    setBlocks([...blocks, newBlock]);
   };
 
   return (
     <DndProvider backend={HTML5Backend}>
       <DashboardContainer>
-        <Header>
-          <Title>Emergency Workflow Dashboard</Title>
-        </Header>
-        <BlockContainer>
-          {blocks.map((block, index) => (
-            <BlockComponent
-              key={block.id}
-              id={block.id}
-              title={block.title}
-              icon={block.icon}
-              contacts={block.contacts}
-              index={index}
-            />
-          ))}
-        </BlockContainer>
+        <Sidebar>
+          <Title>Add New Card</Title>
+          <SidebarButton onClick={() => addBlock('Nuclear Alert')}>
+            <PlusCircle size={16} /> Nuclear Alert
+          </SidebarButton>
+          <SidebarButton onClick={() => addBlock('Notify Team')}>
+            <PlusCircle size={16} /> Notify Team
+          </SidebarButton>
+          <SidebarButton onClick={() => addBlock('Evacuate Area')}>
+            <PlusCircle size={16} /> Evacuate Area
+          </SidebarButton>
+        </Sidebar>
+        <div style={{ flex: 1 }}>
+          <Header>
+            <Title>Emergency Workflow Dashboard</Title>
+          </Header>
+          <div style={{ height: '100vh' }}>
+            <ReactFlowProvider>
+              <DnDFlow />
+            </ReactFlowProvider>
+          </div>
+        </div>
       </DashboardContainer>
     </DndProvider>
   );
