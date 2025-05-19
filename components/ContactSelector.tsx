@@ -1,44 +1,25 @@
-// components/ContactSelector.tsx
-import React from "react";
+import React, { useState } from 'react';
+import styles from './ContactSelector.module.css';
 
-type Contact = {
-  id: string;
-  name: string;
-  email: string;
-};
-
-type Props = {
-  contacts: Contact[];
-  selected: string[];
-  onChange: (selected: string[]) => void;
-};
-
-export const ContactSelector: React.FC<Props> = ({ contacts, selected, onChange }) => {
-  const toggle = (id: string) => {
-    if (selected.includes(id)) {
-      onChange(selected.filter((s) => s !== id));
-    } else {
-      onChange([...selected, id]);
-    }
-  };
+const ContactSelector = () => {
+  const [contacts, setContacts] = useState([
+    { id: 1, name: 'Agent Alpha' },
+    { id: 2, name: 'Agent Beta' },
+    { id: 3, name: 'Agent Gamma' },
+  ]);
 
   return (
-    <div className="contact-selector">
-      <h3>📇 Sélectionnez les contacts à alerter :</h3>
-      <ul>
-        {contacts.map((contact) => (
-          <li key={contact.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={selected.includes(contact.id)}
-                onChange={() => toggle(contact.id)}
-              />
-              {contact.name} ({contact.email})
-            </label>
+    <div className={styles.container}>
+      <h2 className={styles.title}>Select AI Agent</h2>
+      <ul className={styles.contactList}>
+        {contacts.map(contact => (
+          <li key={contact.id} className={styles.contactItem}>
+            {contact.name}
           </li>
         ))}
       </ul>
     </div>
   );
 };
+
+export default ContactSelector;

@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import styles from '../styles/Home.module.css';
 import { Bell, Truck, Shield, Heart, Settings, Activity, Clock, Users, RefreshCw, ArrowRight, AlertTriangle } from 'lucide-react';
 import { config } from '../config';
-import { WorkflowManager } from '../components/WorkflowManager';
-import { WorkflowTrigger } from '../components/WorkflowTrigger';
-import { EmergencyWorkflowBuilder } from '../components/EmergencyWorkflowBuilder';
+import  WorkflowManager  from '../components/WorkflowManager';
+import  WorkflowTrigger from '../components/WorkflowTrigger';
+import EmergencyWorkflowBuilder  from '../components/EmergencyWorkflowBuilder';
 
 interface StatsData {
   id: string;
@@ -222,7 +221,7 @@ export default function HomePage() {
   return (
     <div className={styles.homePage}>
       <Head>
-        <title>SOS - Système d'Alerte d'Urgence</title>
+        <title>SOS - SYSTEME D'ALERTE D'URGENCE</title>
         <meta name="description" content="Système d'alerte d'urgence pour la gestion des situations critiques" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -246,10 +245,10 @@ export default function HomePage() {
           <div className={styles.heroBackground}></div>
           <div className="container">
             <div className={styles.heroContent}>
-              <h1 className={styles.heroTitle}>Système SOS d'Alerte d'Urgence</h1>
-              <p className={styles.heroSubtitle}>
+              <h1 className={styles.heroTitle}>SYSTEME D'ALERTE D'URGENCE</h1>
+              <h2 className={styles.heroSubtitle}>
                 Plateforme de gestion centralisée des alertes et des interventions d'urgence
-              </p>
+              </h2>
 
               <section className={styles.sosSection}>
                 <div className="container">
@@ -334,16 +333,21 @@ export default function HomePage() {
         </section>
 
         {/* n8n.io Workflow Section */}
-        <section className={styles.workflowSection}>
-          <div className="container">
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Interface Workflows (n8n.io)</h2>
-              <p className={styles.sectionSubtitle}>Créez et gérez vos workflows d'automatisation ici</p>
-            </div>
+    <section className={styles.workflowSection}>
+  <div className="container">
+    <div className={styles.sectionHeader}>
+      <h2 className={styles.sectionTitle}>Interface Workflows (n8n.io)</h2>
+      <p className={styles.sectionSubtitle}>Créez et gérez vos workflows d'automatisation ici</p>
+    </div>
             
+            {/* Créateur d'alertes d'urgence */}
             <EmergencyWorkflowBuilder/>
+
+            {/* Gestionnaire de workflows */}
             <WorkflowManager/>
-            <WorkflowTrigger selectedContacts={[]}/>
+
+            {/* Déclencheur de workflows */}
+            <WorkflowTrigger />
        
           </div>
         </section>

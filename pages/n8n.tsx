@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { Button } from '../components/Button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/Tabs';
-import { WorkflowManager } from '../components/WorkflowManager';
+import  WorkflowManager  from '../components/WorkflowManager';
 import { SOSButton } from '../components/SOSButton';
 import { Separator } from '../components/Separator';
 import { useToast } from '../components/UseToast';

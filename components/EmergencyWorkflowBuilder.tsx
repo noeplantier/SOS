@@ -1,26 +1,25 @@
-// components/EmergencyWorkflowBuilder.tsx
-import React, { useState } from "react";
-import { ContactSelector } from "./ContactSelector";
-import { WorkflowTrigger } from "./WorkflowTrigger";
+import React, { useState } from 'react';
+import styles from '../styles/EmergencyWorkflowBuilder.module.css'; // Adjust the path as necessary
 
-const dummyContacts = [
-  { id: "1", name: "Alice", email: "alice@email.com" },
-  { id: "2", name: "Bob", email: "bob@email.com" },
-  { id: "3", name: "Charlie", email: "charlie@email.com" },
-];
-
-export const EmergencyWorkflowBuilder: React.FC = () => {
-  const [selectedContacts, setSelectedContacts] = useState<string[]>([]);
+const EmergencyWorkflowBuilder = () => {
+  const [steps, setSteps] = useState([
+    { id: 1, description: 'Step 1: Initialize' },
+    { id: 2, description: 'Step 2: Analyze' },
+    { id: 3, description: 'Step 3: Execute' },
+  ]);
 
   return (
-    <div className="emergency-workflow">
-      <h2>🛠️ Créateur d'alerte d'urgence</h2>
-      <ContactSelector
-        contacts={dummyContacts}
-        selected={selectedContacts}
-        onChange={setSelectedContacts}
-      />
-      <WorkflowTrigger selectedContacts={selectedContacts} />
+    <div className={styles.container}>
+      <h2 className={styles.title}>Build Emergency Workflow</h2>
+      <ul className={styles.stepList}>
+        {steps.map(step => (
+          <li key={step.id} className={styles.stepItem}>
+            {step.description}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
+
+export default EmergencyWorkflowBuilder;

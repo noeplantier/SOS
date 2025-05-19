@@ -1,0 +1,35 @@
+/* ContactSelector.module.css */
+.container {
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 255, 204, 0.3);
+}
+
+.title {
+  color: #00ffcc;
+  margin-top: 0;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+.contactList {
+  list-style-type: none;
+  padding: 0;
+}
+
+.contactItem {
+  background-color: #2d2d2d;
+  margin: 10px 0;
+  padding: 15px;
+  border-radius: 5px;
+  color: #00ffcc;
+  font-size: 1.1em;
+  transition: background-color 0.3s;
+}
+
+.contactItem:hover {
+  background-color: #00ffcc;
+  color: #121212;
+  cursor: pointer;
+}

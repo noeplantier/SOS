@@ -1,0 +1,17 @@
+/* Dashboard.module.css */
+.dashboard {
+  background-color: #121212;
+  color: #00ffcc;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+}
+
+.header {
+  text-align: center;
+  font-size: 2.5em;
+  margin-bottom: 30px;
+}
+
+.section {
+  margin-bottom: 20px;
+}
