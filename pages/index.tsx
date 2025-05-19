@@ -5,10 +5,14 @@ import { useRouter } from 'next/router';
 import styles from '../styles/Home.module.css';
 import { Bell, Truck, Shield, Heart, Settings, Activity, Clock, Users, RefreshCw, ArrowRight, AlertTriangle } from 'lucide-react';
 import { config } from '../config';
-import  WorkflowManager  from '../components/WorkflowManager';
-import  WorkflowTrigger from '../components/WorkflowTrigger';
-import EmergencyWorkflowBuilder  from '../components/EmergencyWorkflowBuilder';
+import WorkflowManager from '../components/WorkflowManager';
+import WorkflowTrigger from '../components/WorkflowTrigger';
+import EmergencyWorkflowBuilder from '../components/EmergencyWorkflowBuilder';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import Dashboard from '../components/Dashboard';
 
+// Interfaces et données existantes
 interface StatsData {
   id: string;
   title: string;
@@ -219,139 +223,134 @@ export default function HomePage() {
   };
 
   return (
-    <div className={styles.homePage}>
-      <Head>
-        <title>SOS - SYSTEME D'ALERTE D'URGENCE</title>
-        <meta name="description" content="Système d'alerte d'urgence pour la gestion des situations critiques" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <DndProvider backend={HTML5Backend}>
+      <div className={styles.homePage}>
+        <Head>
+          <title>SOS - SYSTEME D'ALERTE D'URGENCE</title>
+          <meta name="description" content="Système d'alerte d'urgence pour la gestion des situations critiques" />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
 
-      <header className="navbar">
-        <div className="container flex justify-between items-center">
-          <div className="navbar-links">
-            <div className={styles.tooltip}>
-              <div className={`${styles.statusDot} ${styles[systemStatus]}`}></div>
-              <span className={styles.tooltipText}>
-                {systemStatus === 'online' ? 'Système en ligne' : 
-                systemStatus === 'degraded' ? 'Système dégradé' : 'Système hors ligne'}
-              </span>
+        <header className="navbar">
+          <div className="container flex justify-between items-center">
+            <div className="navbar-links">
+              <div className={styles.tooltip}>
+                <div className={`${styles.statusDot} ${styles[systemStatus]}`}></div>
+                <span className={styles.tooltipText}>
+                  {systemStatus === 'online' ? 'Système en ligne' :
+                  systemStatus === 'degraded' ? 'Système dégradé' : 'Système hors ligne'}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className={styles.mainContent}>
-        <section className={styles.hero}>
-          <div className={styles.heroBackground}></div>
-          <div className="container">
-            <div className={styles.heroContent}>
-              <h1 className={styles.heroTitle}>SYSTEME D'ALERTE D'URGENCE</h1>
-              <h2 className={styles.heroSubtitle}>
-                Plateforme de gestion centralisée des alertes et des interventions d'urgence
-              </h2>
+        <main className={styles.mainContent}>
+          <section className={styles.hero}>
+            <div className={styles.heroBackground}></div>
+            <div className="container">
+              <div className={styles.heroContent}>
+                <h1 className={styles.heroTitle}>SYSTEME D'ALERTE D'URGENCE</h1>
+                <h2 className={styles.heroSubtitle}>
+                  Plateforme de gestion centralisée des alertes et des interventions d'urgence
+                </h2>
 
-              <section className={styles.sosSection}>
-                <div className="container">
-                  <div className={styles.sosContainer}>
-                    <button 
-                      className={styles.sosButton}
-                      onClick={handleSOSClick}
-                      aria-label="Déclencher une alerte SOS"
-                    >
-                      SOS
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.statsSection}>
-          <div className="container">
-            <div className={styles.statsGrid}>
-              {statsData.map(stat => (
-                <div key={stat.id} className={styles.statCard}>
-                  <div className={styles.statHeader}>
-                    <div>
-                      <div className={styles.statTitle}>{stat.title}</div>
-                      <div className={styles.statValue}>{stat.value}</div>
-                    </div>
-                    <div className={`${styles.statIcon} bg-${stat.color}-100`}>
-                      <stat.icon className={`text-${stat.color}-600`} />
+                <section className={styles.sosSection}>
+                  <div className="container">
+                    <div className={styles.sosContainer}>
+                      <button
+                        className={styles.sosButton}
+                        onClick={handleSOSClick}
+                        aria-label="Déclencher une alerte SOS"
+                      >
+                        SOS
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className={styles.alertsSection}>
-          <div className="container">
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Alertes récentes</h2>
-              <Link href="/alerts" className={styles.viewAllLink}>
-                Voir toutes <ArrowRight size={16} />
-              </Link>
-            </div>
-
-            {recentAlerts.length === 0 ? (
-              <div className="card p-8 text-center">
-                <AlertTriangle className="mx-auto mb-4 text-gray-400" size={48} />
-                <p className="text-gray-500">Aucune alerte récente</p>
+                </section>
               </div>
-            ) : (
-              <div className={styles.alertsGrid}>
-                {recentAlerts.map(alert => {
-                  const typeInfo = alertTypeMap[alert.type];
-                  const statusInfo = alertStatusMap[alert.status];
-                  return (
-                    <div key={alert.id} className={`${styles.alertCard} ${typeInfo.class}`}>
-                      <div className={styles.alertHeader}>
-                        <typeInfo.icon className={styles.alertIcon} />
-                        <div>
-                          <div className={styles.alertType}>{typeInfo.name}</div>
-                          <div className={styles.alertLocation}>{alert.location}</div>
-                        </div>
-                        <div className={`${styles.alertStatus} ${statusInfo.class}`}>
-                          {statusInfo.name}
-                        </div>
+            </div>
+          </section>
+
+          <section className={styles.statsSection}>
+            <div className="container">
+              <div className={styles.statsGrid}>
+                {statsData.map(stat => (
+                  <div key={stat.id} className={styles.statCard}>
+                    <div className={styles.statHeader}>
+                      <div>
+                        <div className={styles.statTitle}>{stat.title}</div>
+                        <div className={styles.statValue}>{stat.value}</div>
                       </div>
-                      <div className={styles.alertDetails}>
-                        <p><strong>Véhicule :</strong> {alert.vehicleId}</p>
-                        <p><strong>Chauffeur :</strong> {alert.driverName}</p>
-                        <p><strong>Heure :</strong> {formatDate(alert.timestamp)}</p>
+                      <div className={`${styles.statIcon} bg-${stat.color}-100`}>
+                        <stat.icon className={`text-${stat.color}-600`} />
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-        </section>
+            </div>
+          </section>
 
-        {/* n8n.io Workflow Section */}
-    <section className={styles.workflowSection}>
-  <div className="container">
-    <div className={styles.sectionHeader}>
-      <h2 className={styles.sectionTitle}>Interface Workflows (n8n.io)</h2>
-      <p className={styles.sectionSubtitle}>Créez et gérez vos workflows d'automatisation ici</p>
-    </div>
-            
-            {/* Créateur d'alertes d'urgence */}
-            <EmergencyWorkflowBuilder/>
+          <section className={styles.alertsSection}>
+            <div className="container">
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Alertes récentes</h2>
+                <Link href="/alerts" className={styles.viewAllLink}>
+                  Voir toutes <ArrowRight size={16} />
+                </Link>
+              </div>
 
-            {/* Gestionnaire de workflows */}
-            <WorkflowManager/>
+              {recentAlerts.length === 0 ? (
+                <div className="card p-8 text-center">
+                  <AlertTriangle className="mx-auto mb-4 text-gray-400" size={48} />
+                  <p className="text-gray-500">Aucune alerte récente</p>
+                </div>
+              ) : (
+                <div className={styles.alertsGrid}>
+                  {recentAlerts.map(alert => {
+                    const typeInfo = alertTypeMap[alert.type];
+                    const statusInfo = alertStatusMap[alert.status];
+                    return (
+                      <div key={alert.id} className={`${styles.alertCard} ${typeInfo.class}`}>
+                        <div className={styles.alertHeader}>
+                          <typeInfo.icon className={styles.alertIcon} />
+                          <div>
+                            <div className={styles.alertType}>{typeInfo.name}</div>
+                            <div className={styles.alertLocation}>{alert.location}</div>
+                          </div>
+                          <div className={`${styles.alertStatus} ${statusInfo.class}`}>
+                            {statusInfo.name}
+                          </div>
+                        </div>
+                        <div className={styles.alertDetails}>
+                          <p><strong>Véhicule :</strong> {alert.vehicleId}</p>
+                          <p><strong>Chauffeur :</strong> {alert.driverName}</p>
+                          <p><strong>Heure :</strong> {formatDate(alert.timestamp)}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
 
-            {/* Déclencheur de workflows */}
-            <WorkflowTrigger />
-       
-          </div>
-        </section>
-      </main>
-    </div>
+          <section className={styles.workflowSection}>
+            <div className="container">
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Interface Workflows (n8n.io)</h2>
+                <p className={styles.sectionSubtitle}>Créez et gérez vos workflows d'automatisation ici</p>
+              </div>
+
+              <EmergencyWorkflowBuilder />
+              <WorkflowManager />
+              <WorkflowTrigger />
+              <Dashboard />
+            </div>
+          </section>
+        </main>
+      </div>
+    </DndProvider>
   );
 }
