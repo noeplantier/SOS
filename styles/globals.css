@@ -85,9 +85,9 @@ a {
 .alertCard.technical::before { background: linear-gradient(135deg, var(--color-technical), #0369a1); }
 
 .sos-button {
-  background: linear-gradient(135deg, #ff3b47, #c1121f);
+  background: linear-gradient(135deg, #f8f8f8, #c1121f);
   color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 4px rgba(181, 31, 31, 0.3);
   font-weight: 700;
   border: none;
   border-radius: var(--radius-md);
@@ -126,11 +126,10 @@ a {
 }
 
 .sos-button:hover {
-  background: linear-gradient(135deg, #ff4b57, #d11320);
   transform: translateY(-2px) scale(1.02);
   filter: brightness(1.15);
   box-shadow: 
-    0 8px 20px rgba(193, 18, 31, 0.6),
+    0 8px 20px rgb(255, 0, 17),
     0 0 0 1px rgba(255, 255, 255, 0.15) inset,
     0 1px 0 rgba(255, 255, 255, 0.15) inset;
 }
@@ -656,7 +655,7 @@ input:checked + .workflow-slider:before {
 }
 
 .empty-state-icon {
-  color: var(--color-gray-500);
+  color: var(--color-gray-900);
   margin-bottom: var(--spacing-md);
 }
 
@@ -680,7 +679,7 @@ input:checked + .workflow-slider:before {
 
 .dashboard {
   background-color: #121212;
-  color: #00ffcc;
+  color: #ffffff;
   padding: 20px;
   font-family: 'Arial', sans-serif;
 }

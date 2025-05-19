@@ -11,6 +11,7 @@ import EmergencyWorkflowBuilder from '../components/EmergencyWorkflowBuilder';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import Dashboard from '../components/Dashboard';
+import Emergency from '../components/Emergency';
 
 // Interfaces et données existantes
 interface StatsData {
@@ -284,6 +285,10 @@ export default function HomePage() {
                       </div>
                       <div className={`${styles.statIcon} bg-${stat.color}-100`}>
                         <stat.icon className={`text-${stat.color}-600`} />
+
+
+                                    
+
                       </div>
                     </div>
                   </div>
@@ -291,6 +296,9 @@ export default function HomePage() {
               </div>
             </div>
           </section>
+
+      {/* Quick Actions Section */}
+       <Emergency />
 
           <section className={styles.alertsSection}>
             <div className="container">
@@ -344,7 +352,6 @@ export default function HomePage() {
               </div>
 
               <EmergencyWorkflowBuilder />
-              <WorkflowManager />
               <WorkflowTrigger />
               <Dashboard />
             </div>

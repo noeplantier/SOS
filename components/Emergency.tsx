@@ -4,13 +4,15 @@ import { useRouter } from 'next/router';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import styled from 'styled-components';
+import { Bell, Mail, Phone, User, AlertTriangle } from 'lucide-react';
 
 // Styles pour les blocs et le tableau de bord
 const DashboardContainer = styled.div`
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  background-color: #f0f2f5;
+  margin-top: 20px;
+  padding: 50px;
+  background: linear-gradient(135deg, #000000 0%, #9c0d17 100%);
   min-height: 100vh;
 `;
 
@@ -19,7 +21,7 @@ const Header = styled.header`
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
-  background-color: #1a1a1a;
+  background-color: rgb(41, 38, 38);
   color: white;
 `;
 
@@ -31,30 +33,63 @@ const Title = styled.h1`
 const BlockContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 20px;
   margin-top: 20px;
 `;
 
 const Block = styled.div`
   background-color: white;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 10px;
+  border-radius: 8px;
+  padding: 20px;
   cursor: move;
-  width: 200px;
+  width: 250px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const BlockHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
 `;
 
 const BlockContent = styled.div`
   margin-top: 10px;
 `;
 
+const ContactList = styled.select`
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+`;
+
+const Button = styled.button`
+  background-color: #9c0d17;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+`;
+
 const EmergencyPage: React.FC = () => {
   const router = useRouter();
   const [blocks, setBlocks] = useState([
-    { id: 1, content: 'Trigger: Nuclear Alert' },
-    { id: 2, content: 'Action: Notify Team' },
-    { id: 3, content: 'Action: Evacuate Area' },
+    { id: 1, title: 'Nuclear Alert', icon: AlertTriangle, contacts: [], message: '' },
+    { id: 2, title: 'Notify Team', icon: Bell, contacts: [], message: '' },
+    { id: 3, title: 'Evacuate Area', icon: User, contacts: [], message: '' },
   ]);
+
+  const contacts = [
+    { id: 'contact1', name: 'Team Leader' },
+    { id: 'contact2', name: 'Security Officer' },
+    { id: 'contact3', name: 'Medical Team' },
+  ];
 
   const moveBlock = (dragIndex: number, hoverIndex: number) => {
     const draggedBlock = blocks[dragIndex];
@@ -64,7 +99,7 @@ const EmergencyPage: React.FC = () => {
     setBlocks(updatedBlocks);
   };
 
-  const BlockComponent = ({ id, content, index }: { id: number; content: string; index: number }) => {
+  const BlockComponent = ({ id, title, icon: Icon, contacts: blockContacts, index }: { id: number; title: string; icon: React.FC<{ className?: string }>; contacts: any[]; index: number }) => {
     const [{ isDragging }, drag] = useDrag({
       type: 'BLOCK',
       item: { id, index },
@@ -83,13 +118,46 @@ const EmergencyPage: React.FC = () => {
       },
     });
 
+    const [message, setMessage] = useState('');
+    const [selectedContacts, setSelectedContacts] = useState<string[]>(blockContacts);
+
+    const handleContactChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const options = e.target.options;
+      const selected: string[] = [];
+      for (let i = 0; i < options.length; i++) {
+        if (options[i].selected) {
+          selected.push(options[i].value);
+        }
+      }
+      setSelectedContacts(selected);
+    };
+
+    const handleSendAlert = () => {
+      alert(`Sending alert to ${selectedContacts.join(', ')}: ${message}`);
+    };
+
     const ref = React.useRef<HTMLDivElement>(null);
     drag(drop(ref));
 
     return (
       <Block ref={ref} style={{ opacity: isDragging ? 0.5 : 1 }}>
-        <h3>Block {id}</h3>
-        <BlockContent>{content}</BlockContent>
+        <BlockHeader>
+          <h3><Icon /> {title}</h3>
+        </BlockHeader>
+        <BlockContent>
+          <ContactList multiple value={selectedContacts} onChange={handleContactChange}>
+            {contacts.map(contact => (
+              <option key={contact.id} value={contact.id}>{contact.name}</option>
+            ))}
+          </ContactList>
+          <textarea
+            placeholder="Type your emergency message here..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            style={{ width: '100%', marginTop: '10px', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+          />
+          <Button onClick={handleSendAlert}>Send Alert</Button>
+        </BlockContent>
       </Block>
     );
   };
@@ -102,7 +170,14 @@ const EmergencyPage: React.FC = () => {
         </Header>
         <BlockContainer>
           {blocks.map((block, index) => (
-            <BlockComponent key={block.id} id={block.id} content={block.content} index={index} />
+            <BlockComponent
+              key={block.id}
+              id={block.id}
+              title={block.title}
+              icon={block.icon}
+              contacts={block.contacts}
+              index={index}
+            />
           ))}
         </BlockContainer>
       </DashboardContainer>

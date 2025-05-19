@@ -1,13 +1,13 @@
 /* EmergencyWorkflowBuilder.module.css */
 .container {
-  background-color: #1e1e1e;
+  background: linear-gradient(135deg, #000000 0%, #9c0d17 100%);
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 255, 204, 0.3);
 }
 
 .title {
-  color: #00ffcc;
+  color: #ffffff;
   margin-top: 0;
   font-size: 1.5em;
   text-align: center;
@@ -23,13 +23,13 @@
   margin: 10px 0;
   padding: 15px;
   border-radius: 5px;
-  color: #00ffcc;
+  color: #ffffff;
   font-size: 1.1em;
   transition: background-color 0.3s;
 }
 
 .stepItem:hover {
-  background-color: #00ffcc;
-  color: #121212;
+  background-color: #e00b0b;
+  color: #ffffff;
   cursor: pointer;
 }

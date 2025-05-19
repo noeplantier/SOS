@@ -23,13 +23,13 @@
   margin: 10px 0;
   padding: 15px;
   border-radius: 5px;
-  color: #00ffcc;
+  background-color: #e00b0b;
   font-size: 1.1em;
   transition: background-color 0.3s;
 }
 
 .contactItem:hover {
-  background-color: #00ffcc;
+  background-color: #e00b0b;
   color: #121212;
   cursor: pointer;
 }
