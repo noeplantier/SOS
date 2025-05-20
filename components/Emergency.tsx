@@ -1,5 +1,4 @@
-// pages/emergency.tsx
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -7,7 +6,7 @@ import styled from 'styled-components';
 import { 
   Bell, Mail, Phone, User, AlertTriangle, PlusCircle, Edit, Code, Save, 
   Trash, X, FilePlus, Settings, Database, Server, Cloud, FileCode,
-  Monitor, Layers, Globe, Package
+  Monitor, Layers, Globe, Package, Copy, Link, Expand
 } from 'lucide-react';
 import ReactFlow, { 
   Background, 
@@ -20,7 +19,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-// Styles pour les blocs et le tableau de bord
+// Styled components
 const DashboardContainer = styled.div`
   display: flex;
   flex-direction: row;
@@ -67,6 +66,7 @@ const SidebarButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   &:hover {
     background-color: #7a0b11;
   }
@@ -110,6 +110,14 @@ const Button = styled.button`
   cursor: pointer;
   margin-top: 10px;
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+  &:hover {
+    background-color: #7a0b11;
+  }
 `;
 
 const Input = styled.input`
@@ -118,6 +126,12 @@ const Input = styled.input`
   margin: 5px 0;
   border-radius: 4px;
   border: 1px solid #ccc;
+  background-color: #333;
+  color: white;
+  &:focus {
+    outline: none;
+    border-color: #9c0d17;
+  }
 `;
 
 const Textarea = styled.textarea`
@@ -128,6 +142,12 @@ const Textarea = styled.textarea`
   border: 1px solid #ccc;
   min-height: 100px;
   font-family: monospace;
+  background-color: #333;
+  color: white;
+  &:focus {
+    outline: none;
+    border-color: #9c0d17;
+  }
 `;
 
 const Modal = styled.div`
@@ -164,6 +184,9 @@ const CloseButton = styled.button`
   color: white;
   font-size: 20px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 const TabContainer = styled.div`
@@ -216,6 +239,11 @@ const Card = styled.div`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   color: white;
   position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  }
 `;
 
 const CardHeader = styled.div`
@@ -246,6 +274,7 @@ const TechBadge = styled.div`
   border-radius: 4px;
   font-size: 12px;
   margin-right: 5px;
+  margin-top: 5px;
 `;
 
 const IconSelector = styled.div`
@@ -290,38 +319,23 @@ const ToggleButton = styled.button<{ active: boolean }>`
   }
 `;
 
-const initialNodes = [
-  { id: '1', position: { x: 0, y: 0 }, data: { label: 'Nuclear Alert', type: 'Nuclear Alert', code: '', content: '' } },
-  { id: '2', position: { x: 200, y: 100 }, data: { label: 'Notify Team', type: 'Notify Team', code: '', content: '' } },
-  { id: '3', position: { x: 400, y: 200 }, data: { label: 'Evacuate Area', type: 'Evacuate Area', code: '', content: '' } },
-];
-
-const initialEdges = [
-  { id: 'e1-2', source: '1', target: '2' },
-  { id: 'e2-3', source: '2', target: '3' },
-];
-
-let id = 0;
-const getId = () => `dndnode_${id++}`;
+const CodePreview = styled.div`
+  background: #1e1e1e;
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  max-height: 100px;
+  overflow: auto;
+  margin: 10px 0;
+`;
 
 
-// Coffee icon was missing (to represent Java)
-const Coffee = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
-    <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"></path>
-    <line x1="6" y1="2" x2="6" y2="4"></line>
-    <line x1="10" y1="2" x2="10" y2="4"></line>
-    <line x1="14" y1="2" x2="14" y2="4"></line>
-  </svg>
-);
-
-// Map for technology icons
+// Technology icons mapping
 const technologyIcons = {
   default: Settings,
   javascript: Code,
   python: FileCode,
-  java: Coffee,
   docker: Package,
   kubernetes: Cloud,
   database: Database,
@@ -331,7 +345,7 @@ const technologyIcons = {
   microservice: Layers
 };
 
-// Helper function to detect technology from code
+// Helper function to detect technology from code content
 const detectTechnology = (code) => {
   if (!code) return 'default';
   
@@ -358,50 +372,84 @@ const detectTechnology = (code) => {
   return 'default';
 };
 
-const CustomNodeComponent = ({ data, id, isConnectable }) => {
-  const techType = detectTechnology(data.code);
-  const TechIcon = data.techIcon ? technologyIcons[data.techIcon] : technologyIcons['default'];
+// Coffee icon for Java
+const Coffee = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={props.size || 24} height={props.size || 24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M17 8h1a4 4 0 1 1 0 8h-1"></path>
+    <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"></path>
+    <line x1="6" y1="2" x2="6" y2="4"></line>
+    <line x1="10" y1="2" x2="10" y2="4"></line>
+    <line x1="14" y1="2" x2="14" y2="4"></line>
+  </svg>
+);
 
+// Custom node component for ReactFlow
+const CustomNodeComponent = ({ data }) => {
+  const TechIcon = data.techIcon && technologyIcons[data.techIcon] ? technologyIcons[data.techIcon] : technologyIcons['default'];
+  
   return (
     <div style={{
-      padding: '10px',
-      borderRadius: '3px',
-      width: 200,
-      fontSize: '12px',
+      padding: '12px',
+      borderRadius: '5px',
+      width: 220,
+      fontSize: '13px',
       color: 'white',
-      textAlign: 'center',
-      backgroundColor: '#9c0d17'
+      textAlign: 'left',
+      backgroundColor: '#9c0d17',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
     }}>
-      <div className="custom-node-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
-        {data.techIcon && <TechIcon size={16} />}
-        {!data.techIcon && (
-          <>
-            {data.type === 'Nuclear Alert' && <AlertTriangle size={16} />}
-            {data.type === 'Notify Team' && <Bell size={16} />}
-            {data.type === 'Evacuate Area' && <User size={16} />}
-            {data.type === 'Custom' && <Settings size={16} />}
-          </>
-        )}
-        <div className="custom-node-title">{data.label}</div>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '8px', 
+        marginBottom: '8px',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+        paddingBottom: '8px'
+      }}>
+        <TechIcon size={16} />
+        <div style={{ fontWeight: 'bold', flex: 1 }}>{data.label}</div>
       </div>
-      <div className="custom-node-body">
-        {data.content && <div>{data.content.substring(0, 50)}...</div>}
-        {data.code && <div><Code size={12} /> Has Code</div>}
+      <div style={{ fontSize: '12px' }}>
+        {data.content && (
+          <div style={{ marginBottom: '5px' }}>
+            {data.content.length > 50 ? `${data.content.substring(0, 50)}...` : data.content}
+          </div>
+        )}
+        {data.code && <div><Code size={12} /> Code</div>}
+        {data.json && <div><Database size={12} /> JSON</div>}
+        {data.docker && <div><Package size={12} /> Docker</div>}
       </div>
     </div>
   );
 };
 
+// Initial ReactFlow nodes and edges
+const initialNodes = [
+  { id: '1', position: { x: 0, y: 0 }, data: { label: 'Nuclear Alert', type: 'Nuclear Alert', techIcon: 'default' }, type: 'custom' },
+  { id: '2', position: { x: 200, y: 100 }, data: { label: 'Notify Team', type: 'Notify Team', techIcon: 'default' }, type: 'custom' },
+  { id: '3', position: { x: 400, y: 200 }, data: { label: 'Evacuate Area', type: 'Evacuate Area', techIcon: 'default' }, type: 'custom' },
+];
+
+const initialEdges = [
+  { id: 'e1-2', source: '1', target: '2' },
+  { id: 'e2-3', source: '2', target: '3' },
+];
+
+// Node types for ReactFlow
 const nodeTypes = {
   custom: CustomNodeComponent,
 };
 
-const DnDFlow = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+let id = 0;
+const getId = () => `node_${id++}`;
+
+// DnDFlow component - handles the ReactFlow instance
+const DnDFlow = ({ blocks, updateBlock }) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editMode, setEditMode] = useState('basic'); // 'basic', 'code', 'json', 'docker'
+  const [editMode, setEditMode] = useState('basic');
   const [nodeFormData, setNodeFormData] = useState({
     label: '',
     type: '',
@@ -413,9 +461,41 @@ const DnDFlow = () => {
   });
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, nodeId: null });
 
-  const onConnect = (params) => setEdges((eds) => addEdge(params, eds));
+  // Connect ReactFlow nodes and edges
+  const onConnect = useCallback((params) => {
+    setEdges((eds) => addEdge(params, eds));
+  }, [setEdges]);
   
-  const onNodeClick = (event, node) => {
+  // Sync nodes with blocks data
+  useEffect(() => {
+    const newNodes = blocks.map((block) => {
+      // Check if we have an existing node for this block
+      const existingNode = nodes.find((n) => n.id === `block_${block.id}`);
+      
+      return {
+        id: `block_${block.id}`,
+        position: existingNode ? existingNode.position : {
+          x: Math.random() * 300, 
+          y: Math.random() * 300
+        },
+        data: {
+          label: block.title,
+          type: block.title,
+          content: block.message || '',
+          code: block.code || '',
+          json: block.json || '',
+          docker: block.docker || '',
+          techIcon: block.techIcon || 'default'
+        },
+        type: 'custom'
+      };
+    });
+    
+    setNodes(newNodes);
+  }, [blocks]);
+  
+  // Handle node click event
+  const onNodeClick = useCallback((_, node) => {
     setSelectedNode(node);
     setNodeFormData({
       label: node.data.label,
@@ -426,10 +506,11 @@ const DnDFlow = () => {
       docker: node.data.docker || '',
       techIcon: node.data.techIcon || 'default'
     });
-  };
+  }, []);
 
-  const onNodeContextMenu = (event, node) => {
-    // Prevent default context menu
+  // Handle right-click on node
+  const onNodeContextMenu = useCallback((event, node) => {
+    // Prevent default browser context menu
     event.preventDefault();
     
     setContextMenu({
@@ -438,13 +519,15 @@ const DnDFlow = () => {
       y: event.clientY,
       nodeId: node.id
     });
-  };
+  }, []);
 
-  const closeContextMenu = () => {
+  // Close context menu
+  const closeContextMenu = useCallback(() => {
     setContextMenu({ visible: false, x: 0, y: 0, nodeId: null });
-  };
+  }, []);
 
-  const editNode = () => {
+  // Edit node via context menu
+  const editNode = useCallback(() => {
     if (contextMenu.nodeId) {
       const node = nodes.find(n => n.id === contextMenu.nodeId);
       if (node) {
@@ -463,23 +546,33 @@ const DnDFlow = () => {
       }
     }
     closeContextMenu();
-  };
+  }, [contextMenu.nodeId, nodes, closeContextMenu]);
 
-  const deleteNode = () => {
+  // Delete node via context menu
+  const deleteNode = useCallback(() => {
     if (contextMenu.nodeId) {
+      // Extract block ID from node ID
+      const blockId = parseInt(contextMenu.nodeId.replace('block_', ''));
+      
+      // Remove the node
       setNodes(nodes => nodes.filter(node => node.id !== contextMenu.nodeId));
+      
+      // Remove any connected edges
       setEdges(edges => edges.filter(
         edge => edge.source !== contextMenu.nodeId && edge.target !== contextMenu.nodeId
       ));
     }
     closeContextMenu();
-  };
+  }, [contextMenu.nodeId, setNodes, setEdges, closeContextMenu]);
 
-  const saveNodeChanges = () => {
+  // Save node changes and sync to blocks
+  const saveNodeChanges = useCallback(() => {
     const detectedTech = editMode === 'code' ? detectTechnology(nodeFormData.code) : 
-                         editMode === 'json' ? 'database' : 
-                         editMode === 'docker' ? 'docker' : nodeFormData.techIcon || 'default';
+                       editMode === 'json' ? 'database' : 
+                       editMode === 'docker' ? 'docker' : 
+                       nodeFormData.techIcon || 'default';
     
+    // Update nodes
     setNodes(nds => 
       nds.map(node => {
         if (node.id === selectedNode.id) {
@@ -500,15 +593,30 @@ const DnDFlow = () => {
         return node;
       })
     );
+    
+    // Extract block ID from node ID and update blocks state in parent
+    const blockId = parseInt(selectedNode.id.replace('block_', ''));
+    
+    // Update the parent blocks state
+    updateBlock(blockId, {
+      title: nodeFormData.label,
+      message: nodeFormData.content,
+      code: nodeFormData.code,
+      json: nodeFormData.json,
+      docker: nodeFormData.docker,
+      techIcon: nodeFormData.techIcon || detectedTech
+    });
+    
     setIsEditing(false);
     setSelectedNode(null);
-  };
+  }, [selectedNode, nodeFormData, editMode, setNodes, updateBlock]);
 
-  const onPaneClick = () => {
+  // Handle pane click to close context menu
+  const onPaneClick = useCallback(() => {
     closeContextMenu();
-  };
+  }, [closeContextMenu]);
 
-  // When clicking outside the context menu, close it
+  // Close context menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (contextMenu.visible) {
@@ -519,55 +627,65 @@ const DnDFlow = () => {
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [contextMenu]);
+  }, [contextMenu.visible, closeContextMenu]);
 
-  const addNode = (type, position) => {
-    const newNode = {
-      id: getId(),
-      position,
-      data: { 
-        label: `${type}`, 
-        type: type,
-        content: '',
-        code: '',
-        json: '',
-        docker: '',
-        techIcon: 'default'
-      },
-      type: 'custom'
-    };
-    setNodes(nds => [...nds, newNode]);
-  };
-
+  // Handle drag over for drop target
   const onDragOver = useCallback((event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
+  // Handle drop of new elements
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
 
-      const reactFlowBounds = document.querySelector('.react-flow').getBoundingClientRect();
-      const type = event.dataTransfer.getData('application/reactflow');
+      const reactFlowBounds = document.querySelector('.react-flow')?.getBoundingClientRect();
+      if (!reactFlowBounds) return;
       
-      // Check if the dropped element is valid
-      if (typeof type === 'undefined' || !type) {
-        return;
+      const nodeData = event.dataTransfer.getData('application/reactflow');
+      if (!nodeData) return;
+      
+      try {
+        const { type, id } = JSON.parse(nodeData);
+        
+        const position = {
+          x: event.clientX - reactFlowBounds.left,
+          y: event.clientY - reactFlowBounds.top,
+        };
+        
+        // Find the corresponding block
+        const blockIndex = blocks.findIndex(b => b.id === parseInt(id));
+        if (blockIndex !== -1) {
+          const block = blocks[blockIndex];
+          
+          // Add the node with block data
+          const newNode = {
+            id: `block_${block.id}`,
+            position,
+            data: {
+              label: block.title,
+              type: block.title,
+              content: block.message || '',
+              code: block.code || '',
+              json: block.json || '',
+              docker: block.docker || '',
+              techIcon: block.techIcon || 'default'
+            },
+            type: 'custom'
+          };
+          
+          setNodes(nds => [...nds, newNode]);
+        }
+      } catch (error) {
+        console.error("Error processing dropped node:", error);
       }
-
-      const position = {
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
-      };
-      
-      addNode(type, position);
     },
-    [setNodes]
+    [blocks, setNodes]
   );
 
   return (
-    <div style={{ height: '100%', width: '100%' }}>
+    <div style={{ height: '80vh', width: '100%' }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -582,10 +700,12 @@ const DnDFlow = () => {
         nodeTypes={nodeTypes}
         fitView
       >
-        <Background />
+        <Background gap={16} size={1} color="#444" />
         <Controls />
-        <Panel position="top-left">
-          <Button onClick={() => setSelectedNode(null)}>Dashboard</Button>
+        <Panel position="top-right">
+          <Button onClick={() => setNodes([])}>
+            <Expand size={16} /> Reset View
+          </Button>
         </Panel>
       </ReactFlow>
       
@@ -610,7 +730,7 @@ const DnDFlow = () => {
         <Modal onClick={() => setIsEditing(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <CloseButton onClick={() => setIsEditing(false)}>
-              <X />
+              <X size={18} />
             </CloseButton>
             <Title>Edit Node</Title>
             
@@ -699,21 +819,15 @@ const DnDFlow = () => {
   );
 };
 
+// Main Emergency component
 const EmergencyPage: React.FC = () => {
   const router = useRouter();
   const [blocks, setBlocks] = useState([
-    { id: 1, title: 'Nuclear Alert', icon: AlertTriangle, contacts: [], message: '', code: '', techIcon: 'default' },
-    { id: 2, title: 'Notify Team', icon: Bell, contacts: [], message: '', code: '', techIcon: 'default' },
-    { id: 3, title: 'Evacuate Area', icon: User, contacts: [], message: '', code: '', techIcon: 'default' },
+    { id: 1, title: 'Nuclear Alert', icon: AlertTriangle, message: '', code: '', json: '', docker: '', techIcon: 'default' },
+    { id: 2, title: 'Notify Team', icon: Bell, message: '', code: '', json: '', docker: '', techIcon: 'default' },
+    { id: 3, title: 'Evacuate Area', icon: User, message: '', code: '', json: '', docker: '', techIcon: 'default' },
   ]);
 
-  const contacts = [
-    { id: 'contact1', name: 'Team Leader' },
-    { id: 'contact2', name: 'Security Officer' },
-    { id: 'contact3', name: 'Medical Team' },
-  ];
-
-  // Support for custom buttons
   const [customButtons, setCustomButtons] = useState([
     { id: 1, title: 'Custom Action', icon: Settings, techIcon: 'default' }
   ]);
@@ -722,142 +836,203 @@ const EmergencyPage: React.FC = () => {
   const [newButtonName, setNewButtonName] = useState('');
   const [newButtonTech, setNewButtonTech] = useState('default');
   
-  // State for dashboard view
-  const [viewMode, setViewMode] = useState('flow'); // 'flow' or 'dashboard'
+  // View mode toggle (flow or dashboard)
+  const [viewMode, setViewMode] = useState('flow');
   
-  // State for editing dashboard items
+  // Editing card state
   const [editingCard, setEditingCard] = useState(null);
+  const [editMode, setEditMode] = useState('basic');
   const [cardFormData, setCardFormData] = useState({
     title: '',
     message: '',
     code: '',
+    json: '',
+    docker: '',
     techIcon: 'default'
   });
-
-  const addBlock = (type: string, techIcon = 'default') => {
+  
+  // Function to add a new block
+  const addBlock = useCallback((type: string, techIcon = 'default') => {
+    const newId = blocks.length > 0 ? Math.max(...blocks.map(b => b.id)) + 1 : 1;
+    
+    const getIconForType = (type) => {
+      switch(type) {
+        case 'Nuclear Alert': return AlertTriangle;
+        case 'Notify Team': return Bell;
+        case 'Evacuate Area': return User;
+        default: return technologyIcons[techIcon] || Settings;
+      }
+    };
+    
     const newBlock = {
-      id: blocks.length + 1,
+      id: newId,
       title: type,
-      icon: type === 'Nuclear Alert' ? AlertTriangle : 
-            type === 'Notify Team' ? Bell : 
-            type === 'Evacuate Area' ? User : Settings,
-      contacts: [],
+      icon: getIconForType(type),
       message: '',
       code: '',
+      json: '',
+      docker: '',
       techIcon: techIcon
     };
-    setBlocks([...blocks, newBlock]);
-  };
+    
+    setBlocks(prevBlocks => [...prevBlocks, newBlock]);
+  }, [blocks]);
 
-  const addCustomButton = () => {
+  // Function to add a custom button
+  const addCustomButton = useCallback(() => {
     if (newButtonName.trim()) {
       const newButton = {
-        id: customButtons.length + 1,
+        id: customButtons.length > 0 ? Math.max(...customButtons.map(b => b.id)) + 1 : 1,
         title: newButtonName,
-        icon: Settings,
+        icon: technologyIcons[newButtonTech] || Settings,
         techIcon: newButtonTech || 'default'
       };
-      setCustomButtons([...customButtons, newButton]);
+      
+      setCustomButtons(prevButtons => [...prevButtons, newButton]);
       
       // Also add it to blocks for dashboard display
       addBlock(newButtonName, newButtonTech);
       
+      // Reset form
       setNewButtonName('');
       setNewButtonTech('default');
       setIsAddingButton(false);
     }
-  };
+  }, [newButtonName, newButtonTech, customButtons, addBlock]);
 
-  const deleteBlock = (id) => {
-    setBlocks(blocks.filter(block => block.id !== id));
-  };
-
-  const editCard = (block) => {
-    setEditingCard(block);
-    setCardFormData({
-      title: block.title,
-      message: block.message || '',
-      code: block.code || '',
-      techIcon: block.techIcon || 'default'
-    });
-  };
-
-  const saveCardChanges = () => {
-    setBlocks(blocks.map(block => {
-      if (block.id === editingCard.id) {
+  // Function to update block by ID
+  const updateBlock = useCallback((id, newData) => {
+    setBlocks(prevBlocks => prevBlocks.map(block => {
+      if (block.id === id) {
+        // Update the icon based on techIcon if it changed
+        const icon = newData.techIcon && newData.techIcon !== block.techIcon ? 
+          (technologyIcons[newData.techIcon] || Settings) : block.icon;
+        
         return {
           ...block,
-          title: cardFormData.title,
-          message: cardFormData.message,
-          code: cardFormData.code,
-          techIcon: cardFormData.techIcon
+          ...newData,
+          icon,
+          title: newData.title || block.title // Ensure title is updated
         };
       }
       return block;
     }));
     
     // Also update custom buttons if this was a custom one
-    const customButton = customButtons.find(btn => btn.title === editingCard.title);
-    if (customButton) {
-      setCustomButtons(customButtons.map(btn => {
-        if (btn.id === customButton.id) {
-          return {
-            ...btn,
-            title: cardFormData.title,
-            techIcon: cardFormData.techIcon
-          };
-        }
-        return btn;
-      }));
+    if (newData.title) {
+      const customButton = customButtons.find(btn => btn.id === id);
+      if (customButton) {
+        setCustomButtons(prevButtons => prevButtons.map(btn => {
+          if (btn.id === id) {
+            return {
+              ...btn,
+              title: newData.title,
+              techIcon: newData.techIcon || btn.techIcon,
+              icon: technologyIcons[newData.techIcon] || btn.icon
+            };
+          }
+          return btn;
+        }));
+      }
     }
+  }, [customButtons]);
+
+  // Function to delete a block
+  const deleteBlock = useCallback((id) => {
+    setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== id));
+    
+    // Also remove from custom buttons if it was a custom one
+    setCustomButtons(prevButtons => prevButtons.filter(btn => btn.id !== id));
+  }, []);
+
+  // Function to edit a card
+  const editCard = useCallback((block) => {
+    setEditingCard(block);
+    setCardFormData({
+      title: block.title,
+      message: block.message || '',
+      code: block.code || '',
+      json: block.json || '',
+      docker: block.docker || '',
+      techIcon: block.techIcon || 'default'
+    });
+    setEditMode('basic');
+  }, []);
+
+  // Function to save card changes
+  const saveCardChanges = useCallback(() => {
+    updateBlock(editingCard.id, {
+      title: cardFormData.title,
+      message: cardFormData.message,
+      code: cardFormData.code,
+      json: cardFormData.json,
+      docker: cardFormData.docker,
+      techIcon: cardFormData.techIcon
+    });
     
     setEditingCard(null);
-  };
+  }, [editingCard, cardFormData, updateBlock]);
 
-  const onDragStart = (event, nodeType) => {
-    event.dataTransfer.setData('application/reactflow', nodeType);
+  // Handle drag start for sidebar buttons
+  const onDragStart = useCallback((event, type, id) => {
+    event.dataTransfer.setData('application/reactflow', JSON.stringify({ type, id }));
     event.dataTransfer.effectAllowed = 'move';
-  };
+  }, []);
 
   return (
     <DndProvider backend={HTML5Backend}>
       <DashboardContainer>
         <Sidebar>
           <Title>Add New Card</Title>
-          <SidebarButton onClick={() => addBlock('Nuclear Alert')} 
-                         draggable 
-                         onDragStart={(event) => onDragStart(event, 'Nuclear Alert')}>
-            <PlusCircle size={16} /> Nuclear Alert
+          
+          {/* Standard buttons */}
+          <SidebarButton 
+            onClick={() => addBlock('Nuclear Alert')} 
+            draggable 
+            onDragStart={(event) => onDragStart(event, 'Nuclear Alert', 1)}
+          >
+            <AlertTriangle size={16} /> Nuclear Alert
           </SidebarButton>
-          <SidebarButton onClick={() => addBlock('Notify Team')}
-                         draggable 
-                         onDragStart={(event) => onDragStart(event, 'Notify Team')}>
-            <PlusCircle size={16} /> Notify Team
+          
+          <SidebarButton 
+            onClick={() => addBlock('Notify Team')}
+            draggable 
+            onDragStart={(event) => onDragStart(event, 'Notify Team', 2)}
+          >
+            <Bell size={16} /> Notify Team
           </SidebarButton>
-          <SidebarButton onClick={() => addBlock('Evacuate Area')}
-                         draggable 
-                         onDragStart={(event) => onDragStart(event, 'Evacuate Area')}>
-            <PlusCircle size={16} /> Evacuate Area
+          
+          <SidebarButton 
+            onClick={() => addBlock('Evacuate Area')}
+            draggable 
+            onDragStart={(event) => onDragStart(event, 'Evacuate Area', 3)}
+          >
+            <User size={16} /> Evacuate Area
           </SidebarButton>
           
           {/* Custom buttons */}
-          {customButtons.map(button => (
-            <SidebarButton 
-              key={button.id} 
-              onClick={() => addBlock(button.title, button.techIcon)}
-              draggable 
-              onDragStart={(event) => onDragStart(event, button.title)}>
-              {technologyIcons[button.techIcon] ? React.createElement(technologyIcons[button.techIcon], { size: 16 }) : <Settings size={16} />} {button.title}
-            </SidebarButton>
-          ))}
+          {customButtons.map(button => {
+            const ButtonIcon = technologyIcons[button.techIcon] || button.icon || Settings;
+            return (
+              <SidebarButton 
+                key={button.id} 
+                onClick={() => addBlock(button.title, button.techIcon)}
+                draggable 
+                onDragStart={(event) => onDragStart(event, button.title, button.id)}
+              >
+                <ButtonIcon size={16} /> {button.title}
+              </SidebarButton>
+            );
+          })}
           
           {/* Add new button interface */}
           {isAddingButton ? (
-            <div style={{ marginTop: '10px' }}>
+            <div style={{ marginTop: '15px', padding: '10px', background: '#333', borderRadius: '4px' }}>
+              <label>Button Name</label>
               <Input 
                 value={newButtonName}
                 onChange={(e) => setNewButtonName(e.target.value)}
-                placeholder="Button name"
+                placeholder="Enter button name"
               />
               
               <label style={{ marginTop: '10px', display: 'block' }}>Technology</label>
@@ -873,45 +1048,57 @@ const EmergencyPage: React.FC = () => {
                 ))}
               </IconSelector>
               
-              <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
-                <Button onClick={addCustomButton}>Add</Button>
-                <Button onClick={() => setIsAddingButton(false)}>Cancel</Button>
+              <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
+                <Button onClick={addCustomButton}>
+                  <PlusCircle size={16} /> Add
+                </Button>
+                <Button onClick={() => setIsAddingButton(false)} style={{ backgroundColor: '#555' }}>
+                  <X size={16} /> Cancel
+                </Button>
               </div>
             </div>
           ) : (
             <SidebarButton 
               onClick={() => setIsAddingButton(true)}
-              style={{ backgroundColor: '#444' }}>
+              style={{ backgroundColor: '#444', marginTop: '15px' }}
+            >
               <FilePlus size={16} /> Create New Card Type
             </SidebarButton>
           )}
           
           {/* View toggle */}
-          <div style={{ marginTop: '20px' }}>
-            <Title style={{ fontSize: '18px' }}>View Mode</Title>
+          <div style={{ marginTop: '30px' }}>
+            <Title style={{ fontSize: '18px', marginBottom: '10px' }}>View Mode</Title>
             <ViewToggle>
-              <ToggleButton active={viewMode === 'flow'} onClick={() => setViewMode('flow')}>
-                Flow Chart
-              </ToggleButton>
+             
               <ToggleButton active={viewMode === 'dashboard'} onClick={() => setViewMode('dashboard')}>
                 Dashboard
               </ToggleButton>
+
+               <ToggleButton active={viewMode === 'flow'} onClick={() => setViewMode('flow')}>
+                Flow Chart
+              </ToggleButton>
+              
             </ViewToggle>
           </div>
         </Sidebar>
-        <div style={{ flex: 1 }}>
+        
+        {/* Main Content Area */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh' }}>
           <Header>
             <Title>Emergency Workflow Dashboard</Title>
           </Header>
-          <div style={{ height: '100vh' }}>
+          
+          {/* Content based on view mode */}
+          <div style={{ flex: 1, overflow: 'hidden' }}>
             {viewMode === 'flow' ? (
               <ReactFlowProvider>
-                <DnDFlow />
+                <DnDFlow blocks={blocks} updateBlock={updateBlock} />
               </ReactFlowProvider>
             ) : (
               <DashboardGrid>
                 {blocks.map(block => {
-                  const TechIcon = technologyIcons[block.techIcon] || Settings;
+                  const TechIcon = technologyIcons[block.techIcon] || block.icon || Settings;
                   return (
                     <Card key={block.id}>
                       <CardHeader>
@@ -928,23 +1115,42 @@ const EmergencyPage: React.FC = () => {
                           </CloseButton>
                         </div>
                       </CardHeader>
+                      
                       <CardContent>
                         {block.message && (
                           <div style={{ marginBottom: '10px' }}>{block.message}</div>
                         )}
+                        
                         {block.code && (
-                          <div style={{ 
-                            background: '#1e1e1e', 
-                            padding: '8px', 
-                            borderRadius: '4px',
-                            fontFamily: 'monospace',
-                            fontSize: '12px',
-                            maxHeight: '100px',
-                            overflow: 'auto'
-                          }}>
-                            <pre style={{ margin: 0 }}>{block.code.substring(0, 100)}{block.code.length > 100 ? '...' : ''}</pre>
-                          </div>
+                          <CodePreview>
+                            <pre style={{ margin: 0 }}>
+                              {block.code.length > 150 
+                                ? `${block.code.substring(0, 150)}...` 
+                                : block.code}
+                            </pre>
+                          </CodePreview>
                         )}
+                        
+                        {block.json && (
+                          <CodePreview>
+                            <pre style={{ margin: 0 }}>
+                              JSON: {block.json.length > 100 
+                                ? `${block.json.substring(0, 100)}...` 
+                                : block.json}
+                            </pre>
+                          </CodePreview>
+                        )}
+                        
+                        {block.docker && (
+                          <CodePreview>
+                            <pre style={{ margin: 0 }}>
+                              Docker: {block.docker.length > 100 
+                                ? `${block.docker.substring(0, 100)}...` 
+                                : block.docker}
+                            </pre>
+                          </CodePreview>
+                        )}
+                        
                         {block.techIcon && block.techIcon !== 'default' && (
                           <TechBadge>
                             <TechIcon size={14} style={{ marginRight: '5px' }} />
@@ -965,46 +1171,88 @@ const EmergencyPage: React.FC = () => {
           <Modal onClick={() => setEditingCard(null)}>
             <ModalContent onClick={(e) => e.stopPropagation()}>
               <CloseButton onClick={() => setEditingCard(null)}>
-                <X />
+                <X size={18} />
               </CloseButton>
               <Title>Edit Card</Title>
               
-              <label>Title</label>
-              <Input 
-                value={cardFormData.title}
-                onChange={(e) => setCardFormData({...cardFormData, title: e.target.value})}
-              />
+              <TabContainer>
+                <Tab active={editMode === 'basic'} onClick={() => setEditMode('basic')}>Basic</Tab>
+                <Tab active={editMode === 'code'} onClick={() => setEditMode('code')}>Code</Tab>
+                <Tab active={editMode === 'json'} onClick={() => setEditMode('json')}>JSON</Tab>
+                <Tab active={editMode === 'docker'} onClick={() => setEditMode('docker')}>Docker</Tab>
+              </TabContainer>
               
-              <label>Message/Description</label>
-              <Textarea 
-                value={cardFormData.message}
-                onChange={(e) => setCardFormData({...cardFormData, message: e.target.value})}
-                placeholder="Enter description or message..."
-              />
+              {editMode === 'basic' && (
+                <>
+                  <label>Title</label>
+                  <Input 
+                    value={cardFormData.title}
+                    onChange={(e) => setCardFormData({...cardFormData, title: e.target.value})}
+                  />
+                  
+                  <label>Message/Description</label>
+                  <Textarea 
+                    value={cardFormData.message}
+                    onChange={(e) => setCardFormData({...cardFormData, message: e.target.value})}
+                    placeholder="Enter description or message..."
+                  />
+                  
+                  <label>Technology</label>
+                  <IconSelector>
+                    {Object.entries(technologyIcons).map(([key, IconComponent]) => (
+                      <IconOption 
+                        key={key} 
+                        selected={cardFormData.techIcon === key}
+                        onClick={() => setCardFormData({...cardFormData, techIcon: key})}
+                      >
+                        <IconComponent size={16} color="white" />
+                      </IconOption>
+                    ))}
+                  </IconSelector>
+                </>
+              )}
               
-              <label>Code</label>
-              <Textarea 
-                value={cardFormData.code}
-                onChange={(e) => setCardFormData({...cardFormData, code: e.target.value})}
-                placeholder="Enter code here..."
-              />
+              {editMode === 'code' && (
+                <>
+                  <label>JavaScript Code</label>
+                  <Textarea 
+                    value={cardFormData.code}
+                    onChange={(e) => setCardFormData({...cardFormData, code: e.target.value})}
+                    placeholder="// Enter JavaScript code here"
+                  />
+                </>
+              )}
               
-              <label>Technology</label>
-              <IconSelector>
-                {Object.entries(technologyIcons).map(([key, IconComponent]) => (
-                  <IconOption 
-                    key={key} 
-                    selected={cardFormData.techIcon === key}
-                    onClick={() => setCardFormData({...cardFormData, techIcon: key})}
-                  >
-                    <IconComponent size={16} color="white" />
-                  </IconOption>
-                ))}
-              </IconSelector>
+              {editMode === 'json' && (
+                <>
+                  <label>JSON Data</label>
+                  <Textarea 
+                    value={cardFormData.json}
+                    onChange={(e) => setCardFormData({...cardFormData, json: e.target.value})}
+                    placeholder="// Enter JSON data here"
+                  />
+                </>
+              )}
               
-              <Button onClick={saveCardChanges}>
-                <Save size={16} /> Save Changes
-              </Button>
+              {editMode === 'docker' && (
+                <>
+                  <label>Docker Configuration</label>
+                  <Textarea 
+                    value={cardFormData.docker}
+                    onChange={(e) => setCardFormData({...cardFormData, docker: e.target.value})}
+                    placeholder="# Enter Dockerfile content or Docker commands"
+                  />
+                </>
+              )}
+              
+              <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
+                <Button onClick={saveCardChanges}>
+                  <Save size={16} /> Save Changes
+                </Button>
+                <Button onClick={() => setEditingCard(null)} style={{ backgroundColor: '#555' }}>
+                  <X size={16} /> Cancel
+                </Button>
+              </div>
             </ModalContent>
           </Modal>
         )}

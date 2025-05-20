@@ -259,7 +259,7 @@ export default function HomePage() {
               <div className={styles.heroContent}>
                 <h1 className={styles.heroTitle}>SYSTEME D'ALERTE D'URGENCE</h1>
                 <h2 className={styles.heroSubtitle}>
-                  Plateforme de gestion centralisée des alertes et des interventions d'urgence
+                  Plateforme de gestion centralisée <br></br> des alertes et des interventions d'urgence
                 </h2>
 
                 <section className={styles.sosSection}>
@@ -352,14 +352,14 @@ export default function HomePage() {
 
           <section className={styles.workflowSection}>
             <div className="container">
-              <div className={styles.sectionHeader}>
+              {/* <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>Interface Workflows (n8n.io)</h2>
                 <p className={styles.sectionSubtitle}>Créez et gérez vos workflows d'automatisation ici</p>
-              </div>
-
+              </div> */}
+{/* 
               <EmergencyWorkflowBuilder />
               <WorkflowTrigger />
-              <Dashboard />
+              <Dashboard /> */}
             </div>
           </section>
         </main>
