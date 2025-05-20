@@ -3,9 +3,8 @@ import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import styles from '../styles/Home.module.css';
-import { Bell, Truck, Shield, Heart, Settings, Activity, Clock, Users, RefreshCw, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Bell, Truck, Shield, Heart, Settings, Activity, Clock, Users, ArrowRight, AlertTriangle } from 'lucide-react';
 import { config } from '../config';
-import WorkflowManager from '../components/WorkflowManager';
 import WorkflowTrigger from '../components/WorkflowTrigger';
 import EmergencyWorkflowBuilder from '../components/EmergencyWorkflowBuilder';
 import { DndProvider } from 'react-dnd';
@@ -48,26 +47,27 @@ const statsData: StatsData[] = [
     icon: Truck,
     color: 'blue'
   },
-  {
-    id: 'todays-alerts',
-    title: 'Alertes aujourd\'hui',
-    value: '3',
-    icon: Bell,
-    color: 'amber'
-  },
-  {
-    id: 'response-time',
-    title: 'Temps moyen de réponse',
-    value: '4min',
-    icon: Clock,
-    color: 'green'
-  },
+
   {
     id: 'teams',
     title: 'Équipes disponibles',
     value: '8',
     icon: Users,
     color: 'indigo'
+  },
+  {
+    id: 'critical-alerts',
+    title: 'Alertes critiques',
+    value: '1',
+    icon: AlertTriangle,
+    color: 'red'
+  },
+  {
+    id: 'system-uptime',
+    title: 'Disponibilité système',
+    value: '99.8%',
+    icon: Activity,
+    color: 'emerald'
   }
 ];
 
@@ -219,12 +219,18 @@ export default function HomePage() {
     console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
   };
 
+    const [isSOSPulsing, setIsSOSPulsing] = useState(false);
+
   const handleSOSClick = () => {
-    router.push('/emergency');
+    setIsSOSPulsing(true);
+    setTimeout(() => {
+      setIsSOSPulsing(false);
+      router.push('/emergency');
+    }, 800);
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
+  <DndProvider backend={HTML5Backend}>
       <div className={styles.homePage}>
         <Head>
           <title>SOS - SYSTEME D'ALERTE D'URGENCE</title>
