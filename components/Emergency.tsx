@@ -3,19 +3,21 @@ import { useRouter } from 'next/router';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import styled from 'styled-components';
-import { 
-  Bell, Mail, Phone, User, AlertTriangle, PlusCircle, Edit, Code, Save, 
+import {
+  Bell, Mail, Phone, User, AlertTriangle, PlusCircle, Edit, Code, Save,
   Trash, X, FilePlus, Settings, Database, Server, Cloud, FileCode,
-  Monitor, Layers, Globe, Package, Copy, Link, Expand
+  Monitor, Layers, Globe, Package, Copy, Link, Expand, GitBranch, GitCommit, GitMerge, GitPullRequest, Bot, Brain, Cpu
 } from 'lucide-react';
-import ReactFlow, { 
-  Background, 
-  Controls, 
-  ReactFlowProvider, 
-  addEdge, 
-  useNodesState, 
+import ReactFlow, {
+  Background,
+  Controls,
+  ReactFlowProvider,
+  addEdge,
+  useNodesState,
   useEdgesState,
-  Panel
+  Panel,
+  useReactFlow,
+  ReactFlowInstance
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -25,7 +27,7 @@ const DashboardContainer = styled.div`
   flex-direction: row;
   padding: 20px;
   background: linear-gradient(135deg, #000000 0%, #9c0d17 100%);
-  min-height: 100vh;
+  max-height: 100vh;
 `;
 
 const Header = styled.header`
@@ -329,7 +331,6 @@ const CodePreview = styled.div`
   margin: 10px 0;
 `;
 
-
 // Technology icons mapping
 const technologyIcons = {
   default: Settings,
@@ -341,13 +342,16 @@ const technologyIcons = {
   web: Globe,
   api: Server,
   ui: Monitor,
-  microservice: Layers
+  microservice: Layers,
+  ai: Bot,
+  ml: Brain,
+  automation: Cpu
 };
 
 // Helper function to detect technology from code content
 const detectTechnology = (code) => {
   if (!code) return 'default';
-  
+
   const lowerCode = code.toLowerCase();
   if (lowerCode.includes('import react') || lowerCode.includes('const ') || lowerCode.includes('function(') || lowerCode.includes('=>')) {
     return 'javascript';
@@ -367,7 +371,13 @@ const detectTechnology = (code) => {
   if (lowerCode.includes('select ') || lowerCode.includes('insert into')) {
     return 'database';
   }
-  
+  if (lowerCode.includes('tensorflow') || lowerCode.includes('keras') || lowerCode.includes('pytorch')) {
+    return 'ml';
+  }
+  if (lowerCode.includes('automation') || lowerCode.includes('workflow') || lowerCode.includes('pipeline')) {
+    return 'automation';
+  }
+
   return 'default';
 };
 
@@ -385,7 +395,7 @@ const Coffee = (props) => (
 // Custom node component for ReactFlow
 const CustomNodeComponent = ({ data }) => {
   const TechIcon = data.techIcon && technologyIcons[data.techIcon] ? technologyIcons[data.techIcon] : technologyIcons['default'];
-  
+
   return (
     <div style={{
       padding: '12px',
@@ -397,10 +407,10 @@ const CustomNodeComponent = ({ data }) => {
       backgroundColor: '#9c0d17',
       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
     }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px', 
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
         marginBottom: '8px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
         paddingBottom: '8px'
@@ -417,6 +427,8 @@ const CustomNodeComponent = ({ data }) => {
         {data.code && <div><Code size={12} /> Code</div>}
         {data.json && <div><Database size={12} /> JSON</div>}
         {data.docker && <div><Package size={12} /> Docker</div>}
+        {data.ai && <div><Bot size={12} /> AI</div>}
+        {data.automation && <div><Cpu size={12} /> Automation</div>}
       </div>
     </div>
   );
@@ -456,25 +468,28 @@ const DnDFlow = ({ blocks, updateBlock }) => {
     code: '',
     json: '',
     docker: '',
+    ai: '',
+    automation: '',
     techIcon: 'default'
   });
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, nodeId: null });
+  const reactFlowInstance = useReactFlow<ReactFlowInstance>();
 
   // Connect ReactFlow nodes and edges
   const onConnect = useCallback((params) => {
     setEdges((eds) => addEdge(params, eds));
   }, [setEdges]);
-  
+
   // Sync nodes with blocks data
   useEffect(() => {
     const newNodes = blocks.map((block) => {
       // Check if we have an existing node for this block
       const existingNode = nodes.find((n) => n.id === `block_${block.id}`);
-      
+
       return {
         id: `block_${block.id}`,
         position: existingNode ? existingNode.position : {
-          x: Math.random() * 300, 
+          x: Math.random() * 300,
           y: Math.random() * 300
         },
         data: {
@@ -484,15 +499,17 @@ const DnDFlow = ({ blocks, updateBlock }) => {
           code: block.code || '',
           json: block.json || '',
           docker: block.docker || '',
+          ai: block.ai || '',
+          automation: block.automation || '',
           techIcon: block.techIcon || 'default'
         },
         type: 'custom'
       };
     });
-    
+
     setNodes(newNodes);
   }, [blocks]);
-  
+
   // Handle node click event
   const onNodeClick = useCallback((_, node) => {
     setSelectedNode(node);
@@ -503,6 +520,8 @@ const DnDFlow = ({ blocks, updateBlock }) => {
       code: node.data.code || '',
       json: node.data.json || '',
       docker: node.data.docker || '',
+      ai: node.data.ai || '',
+      automation: node.data.automation || '',
       techIcon: node.data.techIcon || 'default'
     });
   }, []);
@@ -511,7 +530,7 @@ const DnDFlow = ({ blocks, updateBlock }) => {
   const onNodeContextMenu = useCallback((event, node) => {
     // Prevent default browser context menu
     event.preventDefault();
-    
+
     setContextMenu({
       visible: true,
       x: event.clientX,
@@ -538,6 +557,8 @@ const DnDFlow = ({ blocks, updateBlock }) => {
           code: node.data.code || '',
           json: node.data.json || '',
           docker: node.data.docker || '',
+          ai: node.data.ai || '',
+          automation: node.data.automation || '',
           techIcon: node.data.techIcon || 'default'
         });
         setIsEditing(true);
@@ -552,10 +573,10 @@ const DnDFlow = ({ blocks, updateBlock }) => {
     if (contextMenu.nodeId) {
       // Extract block ID from node ID
       const blockId = parseInt(contextMenu.nodeId.replace('block_', ''));
-      
+
       // Remove the node
       setNodes(nodes => nodes.filter(node => node.id !== contextMenu.nodeId));
-      
+
       // Remove any connected edges
       setEdges(edges => edges.filter(
         edge => edge.source !== contextMenu.nodeId && edge.target !== contextMenu.nodeId
@@ -566,13 +587,15 @@ const DnDFlow = ({ blocks, updateBlock }) => {
 
   // Save node changes and sync to blocks
   const saveNodeChanges = useCallback(() => {
-    const detectedTech = editMode === 'code' ? detectTechnology(nodeFormData.code) : 
-                       editMode === 'json' ? 'database' : 
-                       editMode === 'docker' ? 'docker' : 
+    const detectedTech = editMode === 'code' ? detectTechnology(nodeFormData.code) :
+                       editMode === 'json' ? 'database' :
+                       editMode === 'docker' ? 'docker' :
+                       editMode === 'ai' ? 'ai' :
+                       editMode === 'automation' ? 'automation' :
                        nodeFormData.techIcon || 'default';
-    
+
     // Update nodes
-    setNodes(nds => 
+    setNodes(nds =>
       nds.map(node => {
         if (node.id === selectedNode.id) {
           return {
@@ -585,6 +608,8 @@ const DnDFlow = ({ blocks, updateBlock }) => {
               code: nodeFormData.code,
               json: nodeFormData.json,
               docker: nodeFormData.docker,
+              ai: nodeFormData.ai,
+              automation: nodeFormData.automation,
               techIcon: nodeFormData.techIcon || detectedTech
             }
           };
@@ -592,10 +617,10 @@ const DnDFlow = ({ blocks, updateBlock }) => {
         return node;
       })
     );
-    
+
     // Extract block ID from node ID and update blocks state in parent
     const blockId = parseInt(selectedNode.id.replace('block_', ''));
-    
+
     // Update the parent blocks state
     updateBlock(blockId, {
       title: nodeFormData.label,
@@ -603,9 +628,11 @@ const DnDFlow = ({ blocks, updateBlock }) => {
       code: nodeFormData.code,
       json: nodeFormData.json,
       docker: nodeFormData.docker,
+      ai: nodeFormData.ai,
+      automation: nodeFormData.automation,
       techIcon: nodeFormData.techIcon || detectedTech
     });
-    
+
     setIsEditing(false);
     setSelectedNode(null);
   }, [selectedNode, nodeFormData, editMode, setNodes, updateBlock]);
@@ -641,23 +668,23 @@ const DnDFlow = ({ blocks, updateBlock }) => {
 
       const reactFlowBounds = document.querySelector('.react-flow')?.getBoundingClientRect();
       if (!reactFlowBounds) return;
-      
+
       const nodeData = event.dataTransfer.getData('application/reactflow');
       if (!nodeData) return;
-      
+
       try {
         const { type, id } = JSON.parse(nodeData);
-        
+
         const position = {
           x: event.clientX - reactFlowBounds.left,
           y: event.clientY - reactFlowBounds.top,
         };
-        
+
         // Find the corresponding block
         const blockIndex = blocks.findIndex(b => b.id === parseInt(id));
         if (blockIndex !== -1) {
           const block = blocks[blockIndex];
-          
+
           // Add the node with block data
           const newNode = {
             id: `block_${block.id}`,
@@ -669,11 +696,13 @@ const DnDFlow = ({ blocks, updateBlock }) => {
               code: block.code || '',
               json: block.json || '',
               docker: block.docker || '',
+              ai: block.ai || '',
+              automation: block.automation || '',
               techIcon: block.techIcon || 'default'
             },
             type: 'custom'
           };
-          
+
           setNodes(nds => [...nds, newNode]);
         }
       } catch (error) {
@@ -682,6 +711,69 @@ const DnDFlow = ({ blocks, updateBlock }) => {
     },
     [blocks, setNodes]
   );
+
+  // Function to create breadcrumb trail
+  const createBreadcrumbTrail = useCallback(() => {
+    const trail = [];
+    let currentNodeId = selectedNode?.id;
+
+    while (currentNodeId) {
+      const currentNode = nodes.find(node => node.id === currentNodeId);
+      if (currentNode) {
+        trail.unshift(currentNode);
+        const incomingEdge = edges.find(edge => edge.target === currentNodeId);
+        currentNodeId = incomingEdge?.source;
+      } else {
+        break;
+      }
+    }
+
+    return trail;
+  }, [selectedNode, nodes, edges]);
+
+  // Function to automate workflow using AI
+  const automateWorkflow = useCallback(() => {
+    if (!selectedNode) return;
+
+    const trail = createBreadcrumbTrail();
+    const workflowSteps = trail.map(node => ({
+      id: node.id,
+      label: node.data.label,
+      type: node.data.type,
+      content: node.data.content,
+      code: node.data.code,
+      json: node.data.json,
+      docker: node.data.docker,
+      ai: node.data.ai,
+      automation: node.data.automation,
+      techIcon: node.data.techIcon
+    }));
+
+    // Here you would typically call an AI service to process the workflow
+    console.log('Automating workflow with steps:', workflowSteps);
+
+    // For demonstration, we'll just update the automation field
+    setNodes(nds =>
+      nds.map(node => {
+        if (node.id === selectedNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              automation: `Workflow automated with steps: ${workflowSteps.map(step => step.label).join(' -> ')}`
+            }
+          };
+        }
+        return node;
+      })
+    );
+
+    // Update the parent blocks state
+    const blockId = parseInt(selectedNode.id.replace('block_', ''));
+    updateBlock(blockId, {
+      automation: `Workflow automated with steps: ${workflowSteps.map(step => step.label).join(' -> ')}`
+    });
+  }, [selectedNode, createBreadcrumbTrail, setNodes, updateBlock]);
 
   return (
     <div style={{ height: '80vh', width: '100%' }}>
@@ -705,14 +797,19 @@ const DnDFlow = ({ blocks, updateBlock }) => {
           <Button onClick={() => setNodes([])}>
             <Expand size={16} /> Reset View
           </Button>
+          {selectedNode && (
+            <Button onClick={automateWorkflow}>
+              <Bot size={16} /> Automate Workflow
+            </Button>
+          )}
         </Panel>
       </ReactFlow>
-      
+
       {contextMenu.visible && (
-        <NodeContextMenu 
-          style={{ 
-            top: contextMenu.y, 
-            left: contextMenu.x 
+        <NodeContextMenu
+          style={{
+            top: contextMenu.y,
+            left: contextMenu.x
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -724,7 +821,7 @@ const DnDFlow = ({ blocks, updateBlock }) => {
           </ContextMenuItem>
         </NodeContextMenu>
       )}
-      
+
       {isEditing && selectedNode && (
         <Modal onClick={() => setIsEditing(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
@@ -732,33 +829,35 @@ const DnDFlow = ({ blocks, updateBlock }) => {
               <X size={18} />
             </CloseButton>
             <Title>Edit Node</Title>
-            
+
             <TabContainer>
               <Tab active={editMode === 'basic'} onClick={() => setEditMode('basic')}>Basic</Tab>
               <Tab active={editMode === 'code'} onClick={() => setEditMode('code')}>Code</Tab>
               <Tab active={editMode === 'json'} onClick={() => setEditMode('json')}>JSON</Tab>
               <Tab active={editMode === 'docker'} onClick={() => setEditMode('docker')}>Docker</Tab>
+              <Tab active={editMode === 'ai'} onClick={() => setEditMode('ai')}>AI</Tab>
+              <Tab active={editMode === 'automation'} onClick={() => setEditMode('automation')}>Automation</Tab>
             </TabContainer>
-            
+
             {editMode === 'basic' && (
               <>
                 <label>Label</label>
-                <Input 
-                  value={nodeFormData.label} 
-                  onChange={(e) => setNodeFormData({...nodeFormData, label: e.target.value})} 
+                <Input
+                  value={nodeFormData.label}
+                  onChange={(e) => setNodeFormData({...nodeFormData, label: e.target.value})}
                 />
-                
+
                 <label>Type</label>
-                <Input 
-                  value={nodeFormData.type} 
-                  onChange={(e) => setNodeFormData({...nodeFormData, type: e.target.value})} 
+                <Input
+                  value={nodeFormData.type}
+                  onChange={(e) => setNodeFormData({...nodeFormData, type: e.target.value})}
                 />
-                
+
                 <label>Technology Icon</label>
                 <IconSelector>
                   {Object.entries(technologyIcons).map(([key, IconComponent]) => (
-                    <IconOption 
-                      key={key} 
+                    <IconOption
+                      key={key}
                       selected={nodeFormData.techIcon === key}
                       onClick={() => setNodeFormData({...nodeFormData, techIcon: key})}
                     >
@@ -766,48 +865,70 @@ const DnDFlow = ({ blocks, updateBlock }) => {
                     </IconOption>
                   ))}
                 </IconSelector>
-                
+
                 <label>Content</label>
-                <Textarea 
-                  value={nodeFormData.content} 
-                  onChange={(e) => setNodeFormData({...nodeFormData, content: e.target.value})} 
+                <Textarea
+                  value={nodeFormData.content}
+                  onChange={(e) => setNodeFormData({...nodeFormData, content: e.target.value})}
                 />
               </>
             )}
-            
+
             {editMode === 'code' && (
               <>
                 <label>JavaScript Code</label>
-                <Textarea 
-                  value={nodeFormData.code} 
-                  onChange={(e) => setNodeFormData({...nodeFormData, code: e.target.value})} 
+                <Textarea
+                  value={nodeFormData.code}
+                  onChange={(e) => setNodeFormData({...nodeFormData, code: e.target.value})}
                   placeholder="// Enter JavaScript code here"
                 />
               </>
             )}
-            
+
             {editMode === 'json' && (
               <>
                 <label>JSON Data</label>
-                <Textarea 
-                  value={nodeFormData.json} 
-                  onChange={(e) => setNodeFormData({...nodeFormData, json: e.target.value})} 
+                <Textarea
+                  value={nodeFormData.json}
+                  onChange={(e) => setNodeFormData({...nodeFormData, json: e.target.value})}
                   placeholder="// Enter JSON data here"
                 />
               </>
             )}
-            
+
             {editMode === 'docker' && (
               <>
                 <label>Docker Configuration</label>
-                <Textarea 
-                  value={nodeFormData.docker} 
-                  onChange={(e) => setNodeFormData({...nodeFormData, docker: e.target.value})} 
+                <Textarea
+                  value={nodeFormData.docker}
+                  onChange={(e) => setNodeFormData({...nodeFormData, docker: e.target.value})}
                   placeholder="# Enter Dockerfile content or Docker commands"
                 />
               </>
             )}
-            
+
+            {editMode === 'ai' && (
+              <>
+                <label>AI Configuration</label>
+                <Textarea
+                  value={nodeFormData.ai}
+                  onChange={(e) => setNodeFormData({...nodeFormData, ai: e.target.value})}
+                  placeholder="# Enter AI configuration or commands"
+                />
+              </>
+            )}
+
+            {editMode === 'automation' && (
+              <>
+                <label>Automation Configuration</label>
+                <Textarea
+                  value={nodeFormData.automation}
+                  onChange={(e) => setNodeFormData({...nodeFormData, automation: e.target.value})}
+                  placeholder="# Enter automation configuration or commands"
+                />
+              </>
+            )}
+
             <Button onClick={saveNodeChanges}>
               <Save size={16} /> Save Changes
             </Button>
@@ -822,22 +943,22 @@ const DnDFlow = ({ blocks, updateBlock }) => {
 const EmergencyPage: React.FC = () => {
   const router = useRouter();
   const [blocks, setBlocks] = useState([
-    { id: 1, title: 'Nuclear Alert', icon: AlertTriangle, message: '', code: '', json: '', docker: '', techIcon: 'default' },
-    { id: 2, title: 'Notify Team', icon: Bell, message: '', code: '', json: '', docker: '', techIcon: 'default' },
-    { id: 3, title: 'Evacuate Area', icon: User, message: '', code: '', json: '', docker: '', techIcon: 'default' },
+    { id: 1, title: 'Nuclear Alert', icon: AlertTriangle, message: '', code: '', json: '', docker: '', ai: '', automation: '', techIcon: 'default' },
+    { id: 2, title: 'Notify Team', icon: Bell, message: '', code: '', json: '', docker: '', ai: '', automation: '', techIcon: 'default' },
+    { id: 3, title: 'Evacuate Area', icon: User, message: '', code: '', json: '', docker: '', ai: '', automation: '', techIcon: 'default' },
   ]);
 
   const [customButtons, setCustomButtons] = useState([
     { id: 1, title: 'Custom Action', icon: Settings, techIcon: 'default' }
   ]);
-  
+
   const [isAddingButton, setIsAddingButton] = useState(false);
   const [newButtonName, setNewButtonName] = useState('');
   const [newButtonTech, setNewButtonTech] = useState('default');
-  
+
   // View mode toggle (flow or dashboard)
   const [viewMode, setViewMode] = useState('flow');
-  
+
   // Editing card state
   const [editingCard, setEditingCard] = useState(null);
   const [editMode, setEditMode] = useState('basic');
@@ -847,13 +968,15 @@ const EmergencyPage: React.FC = () => {
     code: '',
     json: '',
     docker: '',
+    ai: '',
+    automation: '',
     techIcon: 'default'
   });
-  
+
   // Function to add a new block
   const addBlock = useCallback((type: string, techIcon = 'default') => {
     const newId = blocks.length > 0 ? Math.max(...blocks.map(b => b.id)) + 1 : 1;
-    
+
     const getIconForType = (type) => {
       switch(type) {
         case 'Nuclear Alert': return AlertTriangle;
@@ -862,7 +985,7 @@ const EmergencyPage: React.FC = () => {
         default: return technologyIcons[techIcon] || Settings;
       }
     };
-    
+
     const newBlock = {
       id: newId,
       title: type,
@@ -871,9 +994,11 @@ const EmergencyPage: React.FC = () => {
       code: '',
       json: '',
       docker: '',
+      ai: '',
+      automation: '',
       techIcon: techIcon
     };
-    
+
     setBlocks(prevBlocks => [...prevBlocks, newBlock]);
   }, [blocks]);
 
@@ -886,12 +1011,12 @@ const EmergencyPage: React.FC = () => {
         icon: technologyIcons[newButtonTech] || Settings,
         techIcon: newButtonTech || 'default'
       };
-      
+
       setCustomButtons(prevButtons => [...prevButtons, newButton]);
-      
+
       // Also add it to blocks for dashboard display
       addBlock(newButtonName, newButtonTech);
-      
+
       // Reset form
       setNewButtonName('');
       setNewButtonTech('default');
@@ -904,9 +1029,9 @@ const EmergencyPage: React.FC = () => {
     setBlocks(prevBlocks => prevBlocks.map(block => {
       if (block.id === id) {
         // Update the icon based on techIcon if it changed
-        const icon = newData.techIcon && newData.techIcon !== block.techIcon ? 
+        const icon = newData.techIcon && newData.techIcon !== block.techIcon ?
           (technologyIcons[newData.techIcon] || Settings) : block.icon;
-        
+
         return {
           ...block,
           ...newData,
@@ -916,7 +1041,7 @@ const EmergencyPage: React.FC = () => {
       }
       return block;
     }));
-    
+
     // Also update custom buttons if this was a custom one
     if (newData.title) {
       const customButton = customButtons.find(btn => btn.id === id);
@@ -939,7 +1064,7 @@ const EmergencyPage: React.FC = () => {
   // Function to delete a block
   const deleteBlock = useCallback((id) => {
     setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== id));
-    
+
     // Also remove from custom buttons if it was a custom one
     setCustomButtons(prevButtons => prevButtons.filter(btn => btn.id !== id));
   }, []);
@@ -953,6 +1078,8 @@ const EmergencyPage: React.FC = () => {
       code: block.code || '',
       json: block.json || '',
       docker: block.docker || '',
+      ai: block.ai || '',
+      automation: block.automation || '',
       techIcon: block.techIcon || 'default'
     });
     setEditMode('basic');
@@ -966,9 +1093,11 @@ const EmergencyPage: React.FC = () => {
       code: cardFormData.code,
       json: cardFormData.json,
       docker: cardFormData.docker,
+      ai: cardFormData.ai,
+      automation: cardFormData.automation,
       techIcon: cardFormData.techIcon
     });
-    
+
     setEditingCard(null);
   }, [editingCard, cardFormData, updateBlock]);
 
@@ -983,62 +1112,62 @@ const EmergencyPage: React.FC = () => {
       <DashboardContainer>
         <Sidebar>
           <Title>Add New Card</Title>
-          
+
           {/* Standard buttons */}
-          <SidebarButton 
-            onClick={() => addBlock('Nuclear Alert')} 
-            draggable 
+          <SidebarButton
+            onClick={() => addBlock('Nuclear Alert')}
+            draggable
             onDragStart={(event) => onDragStart(event, 'Nuclear Alert', 1)}
           >
             <AlertTriangle size={16} /> Nuclear Alert
           </SidebarButton>
-          
-          <SidebarButton 
+
+          <SidebarButton
             onClick={() => addBlock('Notify Team')}
-            draggable 
+            draggable
             onDragStart={(event) => onDragStart(event, 'Notify Team', 2)}
           >
             <Bell size={16} /> Notify Team
           </SidebarButton>
-          
-          <SidebarButton 
+
+          <SidebarButton
             onClick={() => addBlock('Evacuate Area')}
-            draggable 
+            draggable
             onDragStart={(event) => onDragStart(event, 'Evacuate Area', 3)}
           >
             <User size={16} /> Evacuate Area
           </SidebarButton>
-          
+
           {/* Custom buttons */}
           {customButtons.map(button => {
             const ButtonIcon = technologyIcons[button.techIcon] || button.icon || Settings;
             return (
-              <SidebarButton 
-                key={button.id} 
+              <SidebarButton
+                key={button.id}
                 onClick={() => addBlock(button.title, button.techIcon)}
-                draggable 
+                draggable
                 onDragStart={(event) => onDragStart(event, button.title, button.id)}
               >
                 <ButtonIcon size={16} /> {button.title}
               </SidebarButton>
             );
           })}
-          
+
           {/* Add new button interface */}
           {isAddingButton ? (
             <div style={{ marginTop: '15px', padding: '10px', background: '#333', borderRadius: '4px' }}>
               <label>Button Name</label>
-              <Input 
+              <Input
                 value={newButtonName}
                 onChange={(e) => setNewButtonName(e.target.value)}
                 placeholder="Enter button name"
               />
-              
+
               <label style={{ marginTop: '10px', display: 'block' }}>Technology</label>
               <IconSelector>
                 {Object.entries(technologyIcons).map(([key, IconComponent]) => (
-                  <IconOption 
-                    key={key} 
+                  <IconOption
+                    key={key}
                     selected={newButtonTech === key}
                     onClick={() => setNewButtonTech(key)}
                   >
@@ -1046,7 +1175,7 @@ const EmergencyPage: React.FC = () => {
                   </IconOption>
                 ))}
               </IconSelector>
-              
+
               <div style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
                 <Button onClick={addCustomButton}>
                   <PlusCircle size={16} /> Add
@@ -1057,19 +1186,19 @@ const EmergencyPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <SidebarButton 
+            <SidebarButton
               onClick={() => setIsAddingButton(true)}
               style={{ backgroundColor: '#444', marginTop: '15px' }}
             >
               <FilePlus size={16} /> Create New Card Type
             </SidebarButton>
           )}
-          
+
           {/* View toggle */}
           <div style={{ marginTop: '30px' }}>
             <Title style={{ fontSize: '18px', marginBottom: '10px' }}>View Mode</Title>
             <ViewToggle>
-             
+
               <ToggleButton active={viewMode === 'dashboard'} onClick={() => setViewMode('dashboard')}>
                 Dashboard
               </ToggleButton>
@@ -1077,17 +1206,17 @@ const EmergencyPage: React.FC = () => {
                <ToggleButton active={viewMode === 'flow'} onClick={() => setViewMode('flow')}>
                 Flow Chart
               </ToggleButton>
-              
+
             </ViewToggle>
           </div>
         </Sidebar>
-        
+
         {/* Main Content Area */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh' }}>
           <Header>
             <Title>Emergency Workflow Dashboard</Title>
           </Header>
-          
+
           {/* Content based on view mode */}
           <div style={{ flex: 1, overflow: 'hidden' }}>
             {viewMode === 'flow' ? (
@@ -1114,42 +1243,62 @@ const EmergencyPage: React.FC = () => {
                           </CloseButton>
                         </div>
                       </CardHeader>
-                      
+
                       <CardContent>
                         {block.message && (
                           <div style={{ marginBottom: '10px' }}>{block.message}</div>
                         )}
-                        
+
                         {block.code && (
                           <CodePreview>
                             <pre style={{ margin: 0 }}>
-                              {block.code.length > 150 
-                                ? `${block.code.substring(0, 150)}...` 
+                              {block.code.length > 150
+                                ? `${block.code.substring(0, 150)}...`
                                 : block.code}
                             </pre>
                           </CodePreview>
                         )}
-                        
+
                         {block.json && (
                           <CodePreview>
                             <pre style={{ margin: 0 }}>
-                              JSON: {block.json.length > 100 
-                                ? `${block.json.substring(0, 100)}...` 
+                              JSON: {block.json.length > 100
+                                ? `${block.json.substring(0, 100)}...`
                                 : block.json}
                             </pre>
                           </CodePreview>
                         )}
-                        
+
                         {block.docker && (
                           <CodePreview>
                             <pre style={{ margin: 0 }}>
-                              Docker: {block.docker.length > 100 
-                                ? `${block.docker.substring(0, 100)}...` 
+                              Docker: {block.docker.length > 100
+                                ? `${block.docker.substring(0, 100)}...`
                                 : block.docker}
                             </pre>
                           </CodePreview>
                         )}
-                        
+
+                        {block.ai && (
+                          <CodePreview>
+                            <pre style={{ margin: 0 }}>
+                              AI: {block.ai.length > 100
+                                ? `${block.ai.substring(0, 100)}...`
+                                : block.ai}
+                            </pre>
+                          </CodePreview>
+                        )}
+
+                        {block.automation && (
+                          <CodePreview>
+                            <pre style={{ margin: 0 }}>
+                              Automation: {block.automation.length > 100
+                                ? `${block.automation.substring(0, 100)}...`
+                                : block.automation}
+                            </pre>
+                          </CodePreview>
+                        )}
+
                         {block.techIcon && block.techIcon !== 'default' && (
                           <TechBadge>
                             <TechIcon size={14} style={{ marginRight: '5px' }} />
@@ -1164,7 +1313,7 @@ const EmergencyPage: React.FC = () => {
             )}
           </div>
         </div>
-        
+
         {/* Edit Card Modal */}
         {editingCard && (
           <Modal onClick={() => setEditingCard(null)}>
@@ -1173,34 +1322,36 @@ const EmergencyPage: React.FC = () => {
                 <X size={18} />
               </CloseButton>
               <Title>Edit Card</Title>
-              
+
               <TabContainer>
                 <Tab active={editMode === 'basic'} onClick={() => setEditMode('basic')}>Basic</Tab>
                 <Tab active={editMode === 'code'} onClick={() => setEditMode('code')}>Code</Tab>
                 <Tab active={editMode === 'json'} onClick={() => setEditMode('json')}>JSON</Tab>
                 <Tab active={editMode === 'docker'} onClick={() => setEditMode('docker')}>Docker</Tab>
+                <Tab active={editMode === 'ai'} onClick={() => setEditMode('ai')}>AI</Tab>
+                <Tab active={editMode === 'automation'} onClick={() => setEditMode('automation')}>Automation</Tab>
               </TabContainer>
-              
+
               {editMode === 'basic' && (
                 <>
                   <label>Title</label>
-                  <Input 
+                  <Input
                     value={cardFormData.title}
                     onChange={(e) => setCardFormData({...cardFormData, title: e.target.value})}
                   />
-                  
+
                   <label>Message/Description</label>
-                  <Textarea 
+                  <Textarea
                     value={cardFormData.message}
                     onChange={(e) => setCardFormData({...cardFormData, message: e.target.value})}
                     placeholder="Enter description or message..."
                   />
-                  
+
                   <label>Technology</label>
                   <IconSelector>
                     {Object.entries(technologyIcons).map(([key, IconComponent]) => (
-                      <IconOption 
-                        key={key} 
+                      <IconOption
+                        key={key}
                         selected={cardFormData.techIcon === key}
                         onClick={() => setCardFormData({...cardFormData, techIcon: key})}
                       >
@@ -1210,40 +1361,62 @@ const EmergencyPage: React.FC = () => {
                   </IconSelector>
                 </>
               )}
-              
+
               {editMode === 'code' && (
                 <>
                   <label>JavaScript Code</label>
-                  <Textarea 
+                  <Textarea
                     value={cardFormData.code}
                     onChange={(e) => setCardFormData({...cardFormData, code: e.target.value})}
                     placeholder="// Enter JavaScript code here"
                   />
                 </>
               )}
-              
+
               {editMode === 'json' && (
                 <>
                   <label>JSON Data</label>
-                  <Textarea 
+                  <Textarea
                     value={cardFormData.json}
                     onChange={(e) => setCardFormData({...cardFormData, json: e.target.value})}
                     placeholder="// Enter JSON data here"
                   />
                 </>
               )}
-              
+
               {editMode === 'docker' && (
                 <>
                   <label>Docker Configuration</label>
-                  <Textarea 
+                  <Textarea
                     value={cardFormData.docker}
                     onChange={(e) => setCardFormData({...cardFormData, docker: e.target.value})}
                     placeholder="# Enter Dockerfile content or Docker commands"
                   />
                 </>
               )}
-              
+
+              {editMode === 'ai' && (
+                <>
+                  <label>AI Configuration</label>
+                  <Textarea
+                    value={cardFormData.ai}
+                    onChange={(e) => setCardFormData({...cardFormData, ai: e.target.value})}
+                    placeholder="# Enter AI configuration or commands"
+                  />
+                </>
+              )}
+
+              {editMode === 'automation' && (
+                <>
+                  <label>Automation Configuration</label>
+                  <Textarea
+                    value={cardFormData.automation}
+                    onChange={(e) => setCardFormData({...cardFormData, automation: e.target.value})}
+                    placeholder="# Enter automation configuration or commands"
+                  />
+                </>
+              )}
+
               <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                 <Button onClick={saveCardChanges}>
                   <Save size={16} /> Save Changes

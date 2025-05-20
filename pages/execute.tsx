@@ -75,7 +75,7 @@ export default function ExecutePage() {
     setIsExecuting(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_N8N_API_URL || 'http://localhost:5678/api/v1';
+      const apiUrl = process.env.NEXT_PUBLIC_N8N_API_URL || 'http://localhost:5678';
       const executeUrl = `${apiUrl}/workflows/${workflowId}/execute`;
 
       // Préparer les données d'exécution
