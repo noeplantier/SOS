@@ -23,7 +23,6 @@ import 'reactflow/dist/style.css';
 const DashboardContainer = styled.div`
   display: flex;
   flex-direction: row;
-  margin-top: 20px;
   padding: 20px;
   background: linear-gradient(135deg, #000000 0%, #9c0d17 100%);
   min-height: 100vh;

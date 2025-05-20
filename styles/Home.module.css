@@ -18,11 +18,9 @@
 
 /* Section hero */
 .hero {
-  padding: 4rem 0;
   background: linear-gradient(135deg, #000000 0%, #9c0d17 100%);
   color: white;
   text-align: center;
-  border-radius: 0 0 2rem 2rem;
   position: relative;
   overflow: hidden;
 }
@@ -372,12 +370,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 8rem;
-  height: 8rem;
-  border-radius: 9999px;
+ width: 160px;
+height: 160px;
+border-radius: 50%;
+box-shadow:
+  0 4px 14px rgba(0, 0, 0, 0.15);
   background-color: #ed0014;
   color: white;
-  font-size: 2rem;
+  font-size: 1.7rem;
   font-weight: 700;
   margin: 0 auto;
   box-shadow: 0 0 0 0 rgba(255, 0, 21, 0.7);

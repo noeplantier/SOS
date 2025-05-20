@@ -279,29 +279,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          <section className={styles.statsSection}>
-            <div className="container">
-              <div className={styles.statsGrid}>
-                {statsData.map(stat => (
-                  <div key={stat.id} className={styles.statCard}>
-                    <div className={styles.statHeader}>
-                      <div>
-                        <div className={styles.statTitle}>{stat.title}</div>
-                        <div className={styles.statValue}>{stat.value}</div>
-                      </div>
-                      <div className={`${styles.statIcon} bg-${stat.color}-100`}>
-                        <stat.icon className={`text-${stat.color}-600`} />
 
-
-                                    
-
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
 
       {/* Quick Actions Section */}
        <Emergency />
