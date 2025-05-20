@@ -2,7 +2,6 @@
 .container {
   background: linear-gradient(135deg, #000000 0%, #9c0d17 100%);
   border-radius: 10px;
-  padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 255, 204, 0.3);
 }
 

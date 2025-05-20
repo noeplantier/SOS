@@ -259,7 +259,7 @@ export default function HomePage() {
               <div className={styles.heroContent}>
                 <h1 className={styles.heroTitle}>SYSTEME D'ALERTE D'URGENCE</h1>
                 <h2 className={styles.heroSubtitle}>
-                  Plateforme de gestion centralisée <br></br> des alertes et des interventions d'urgence
+                  PLATEFORME D'ALERTES CENTRALISÉES
                 </h2>
 
                 <section className={styles.sosSection}>

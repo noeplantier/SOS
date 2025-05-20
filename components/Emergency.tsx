@@ -446,7 +446,7 @@ const getId = () => `node_${id++}`;
 const DnDFlow = ({ blocks, updateBlock }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedNode, setSelectedNode] = useState<import('reactflow').Node<any> | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editMode, setEditMode] = useState('basic');
   const [nodeFormData, setNodeFormData] = useState({
