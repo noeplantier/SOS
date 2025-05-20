@@ -376,7 +376,7 @@
   width: 8rem;
   height: 8rem;
   border-radius: 9999px;
-  background-color: #d60415;
+  background-color: #ed0014;
   color: white;
   font-size: 2rem;
   font-weight: 700;
@@ -388,7 +388,6 @@
 }
 
 .sosButton:hover {
-  background-color: #c1121f;
   transform: scale(1.05);
 }
 
