@@ -217,25 +217,17 @@ const AlertPage: React.FC = () => {
       <main className={styles.alertMain}>
         <div className={styles.alertContainer}>
           <div className={styles.alertIcon}>
-            <AlertTriangle size={80} color="#e63946" />
+            <AlertTriangle size={250} color="#d70012ec" />
           </div>
           
-          <h1 className={styles.alertTitle}>ALERTE D'URGENCE EN COURS</h1>
+          <h1 className={styles.alertTitle}>ALERTE EN COURS</h1>
           
           <div className={styles.alertStatus}>
             <div className={`${styles.statusPulse} ${styles.active}`}></div>
             <span>Signal d'urgence actif</span>
           </div>
           
-          <div className={styles.typeSelector}>
-            <div className={styles.typeSelectorLabel}>Type d'urgence:</div>
-            <div className={styles.typeButtons}>
-              <AlertTypeButton type="medical" label="Médicale" icon={Heart} />
-              <AlertTypeButton type="security" label="Sécurité" icon={Shield} />
-              <AlertTypeButton type="fire" label="Incendie" icon={AlertTriangle} />
-              <AlertTypeButton type="other" label="Autre" icon={Info} />
-            </div>
-          </div>
+     
 
           <div className={styles.alertInfo}>
             <div className={styles.infoItem}>
@@ -414,11 +406,7 @@ const AlertPage: React.FC = () => {
           <div className={styles.footerText}>
             Système d'Alerte d'Urgence - Tous droits réservés
           </div>
-          <div className={styles.footerLinks}>
-            <a href="#" onClick={(e) => e.preventDefault()}>Mentions légales</a>
-            <a href="#" onClick={(e) => e.preventDefault()}>Confidentialité</a>
-            <a href="#" onClick={(e) => e.preventDefault()}>Contact</a>
-          </div>
+        
         </div>
       </footer>
     </div>
