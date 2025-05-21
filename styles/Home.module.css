@@ -6,6 +6,7 @@
 
 /* Styles spécifiques à la page d'accueil */
 .homePage {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -157,7 +158,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin: 1rem 1rem 2rem 2rem;
+  padding: 3rem;
 }
 
 .sectionTitle {
@@ -591,12 +593,7 @@
   .statCard {
     padding: 1rem;
   }
-  
-  .sosButton {
-    width: 6rem;
-    height: 6rem;
-    font-size: 1.5rem;
-  }
+
 }
 
 /* Mode sombre */
@@ -644,5 +641,131 @@
   
   .versionText {
     color: #64748b;
+  }
+}
+
+/* Tilted Cards React Bits */
+.tiltedCardsSection {
+  padding: 3rem 0;
+  position: relative;
+  overflow: hidden;
+  margin-top: 2rem;
+}
+
+.tiltedCardsContainer {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 1.5rem;
+  padding: 2rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  perspective: 1000px;
+}
+
+.tiltedCard {
+  flex: 1;
+  position: relative;
+  min-height: 280px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, #000000a9, #716060);
+  z-index: var(--card-z-index, 1);
+  transition: all 0.4s ease-out;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.tiltedCard:hover {
+  transform: rotate(0) scale(1.05);
+  z-index: 10;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+.tiltedCardInner {
+  padding: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  position: relative;
+  overflow: hidden;
+}
+
+.tiltedCardIconWrapper {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.tiltedCard:hover .tiltedCardIconWrapper {
+  transform: scale(1.1);
+}
+
+.tiltedCardTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: white;
+  position: relative;
+}
+
+.tiltedCardDescription {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  position: relative;
+  flex: 1;
+}
+
+.tiltedCardShine {
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 250%;
+  height: 250%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(25deg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tiltedCard:hover .tiltedCardShine {
+  opacity: 1;
+  animation: shineEffect 1.5s forwards;
+}
+
+@keyframes shineEffect {
+  0% {
+    top: -100%;
+    left: -100%;
+  }
+  100% {
+    top: 100%;
+    left: 100%;
+  }
+}
+
+/* Media queries pour responsivité */
+@media (max-width: 768px) {
+  .tiltedCardsContainer {
+    flex-direction: column;
+    padding: 1rem;
+  }
+  
+  .tiltedCard {
+    transform: none !important;
+    margin-bottom: 1.5rem;
+    min-height: 200px;
   }
 }

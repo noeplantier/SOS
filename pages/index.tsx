@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import styles from '../styles/Home.module.css';
-import { Bell, Truck, Shield, Heart, Settings, Activity, Clock, Users, ArrowRight, AlertTriangle } from 'lucide-react';
+import { Bell, Truck, Shield, Heart, Settings, Activity, Clock, Users, ArrowRight, AlertTriangle, Zap, Radio, CheckCircle } from 'lucide-react';
 import { config } from '../config';
-import WorkflowTrigger from '../components/WorkflowTrigger';
-import EmergencyWorkflowBuilder from '../components/EmergencyWorkflowBuilder';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import Dashboard from '../components/Dashboard';
 import Emergency from '../components/Emergency';
 
 // Interfaces et données existantes
@@ -70,6 +66,35 @@ const statsData: StatsData[] = [
     color: 'emerald'
   }
 ];
+
+
+const systemBenefits = [
+  {
+    id: 'benefit-1',
+    title: 'Réponse Rapide',
+    description: 'Interventions d\'urgence accélérées grâce à notre système de notification instantanée et notre workflow automatisé d\'allocation des ressources.',
+    icon: Zap,
+    color: '#e63946',
+    backgroundColor: 'rgba(230, 57, 70, 0.1)'
+  },
+  {
+    id: 'benefit-2',
+    title: 'Coordination Centralisée',
+    description: 'Interface unifiée permettant une gestion globale des alertes et une coordination parfaite entre les différentes équipes d\'intervention.',
+    icon: Radio, 
+    color: '#457b9d',
+    backgroundColor: 'rgba(69, 123, 157, 0.1)'
+  },
+  {
+    id: 'benefit-3',
+    title: 'Haute Fiabilité',
+    description: 'Système redondant avec une disponibilité de 99,8% garantissant un fonctionnement continu même dans les situations les plus critiques.',
+    icon: CheckCircle,
+    color: '#2a9d8f',
+    backgroundColor: 'rgba(42, 157, 143, 0.1)'
+  }
+];
+
 
 const recentAlerts: Alert[] = [
   {
@@ -275,59 +300,50 @@ export default function HomePage() {
                     </div>
                   </div>
                 </section>
+
+
+        {/* Tilted Cards React Bits */}
+                <section className={styles.tiltedCardsSection}>
+                  <div className={styles.tiltedCardsContainer}>
+                    {systemBenefits.map((benefit, index) => (
+                      <div 
+                        key={benefit.id}
+                        className={styles.tiltedCard}
+                        style={{
+                          '--card-rotation': `${(index - 1) * 2}deg`,
+                          '--card-scale': index === 1 ? '1.05' : '1',
+                          '--card-z-index': index === 1 ? '2' : '1',
+                        } as React.CSSProperties}
+                      >
+                        <div className={styles.tiltedCardInner}>
+                          <div 
+                            className={styles.tiltedCardIconWrapper}
+                            style={{ backgroundColor: benefit.backgroundColor }}
+                          >
+                            {React.createElement(benefit.icon, { 
+                              size: 32, 
+                              color: benefit.color,
+                              strokeWidth: 2
+                            })}
+                          </div>
+                          <h3 className={styles.tiltedCardTitle}>{benefit.title}</h3>
+                          <p className={styles.tiltedCardDescription}>{benefit.description}</p>
+                          <div className={styles.tiltedCardShine}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
               </div>
             </div>
           </section>
 
-
+        
 
       {/* Quick Actions Section */}
        <Emergency />
 
-          <section className={styles.alertsSection}>
-            <div className="container">
-              <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Alertes récentes</h2>
-                <Link href="/alerts" className={styles.viewAllLink}>
-                  Voir toutes <ArrowRight size={16} />
-                </Link>
-              </div>
-
-              {recentAlerts.length === 0 ? (
-                <div className="card p-8 text-center">
-                  <AlertTriangle className="mx-auto mb-4 text-gray-400" size={48} />
-                  <p className="text-gray-500">Aucune alerte récente</p>
-                </div>
-              ) : (
-                <div className={styles.alertsGrid}>
-                  {recentAlerts.map(alert => {
-                    const typeInfo = alertTypeMap[alert.type];
-                    const statusInfo = alertStatusMap[alert.status];
-                    return (
-                      <div key={alert.id} className={`${styles.alertCard} ${typeInfo.class}`}>
-                        <div className={styles.alertHeader}>
-                          <typeInfo.icon className={styles.alertIcon} />
-                          <div>
-                            <div className={styles.alertType}>{typeInfo.name}</div>
-                            <div className={styles.alertLocation}>{alert.location}</div>
-                          </div>
-                          <div className={`${styles.alertStatus} ${statusInfo.class}`}>
-                            {statusInfo.name}
-                          </div>
-                        </div>
-                        <div className={styles.alertDetails}>
-                          <p><strong>Véhicule :</strong> {alert.vehicleId}</p>
-                          <p><strong>Chauffeur :</strong> {alert.driverName}</p>
-                          <p><strong>Heure :</strong> {formatDate(alert.timestamp)}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </section>
-
+         
           <section className={styles.workflowSection}>
             <div className="container">
               {/* <div className={styles.sectionHeader}>
