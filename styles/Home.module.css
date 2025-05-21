@@ -6,6 +6,7 @@
 
 /* Styles spécifiques à la page d'accueil */
 .homePage {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -45,7 +46,7 @@
 }
 
 .heroTitle {
-  font-size: 5rem;
+  font-size: 5.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
   letter-spacing: -0.025em;
@@ -370,6 +371,7 @@
 }
 
 .sosButton {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -401,7 +403,6 @@
 }
 
 .sosButton:hover {
-  transform: scale(1.05);
   box-shadow: 
     0 0 0 0 rgba(255, 0, 21, 0.7),
     0 0 25px 15px rgba(255, 0, 21, 0.5),
@@ -660,6 +661,7 @@
   padding: 2rem 0;
   max-width: 1200px;
   margin: 0 auto;
+  margin-top: -2rem;
   perspective: 1000px;
 }
 
@@ -668,7 +670,7 @@
   position: relative;
   min-height: 280px;
   border-radius: 16px;
-  background: linear-gradient(120deg, #000000a9, #716060);
+  background: linear-gradient(120deg, #000000, #554242);
   z-index: var(--card-z-index, 1);
   transition: all 0.4s ease-out;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
@@ -678,12 +680,12 @@
 .tiltedCard:hover {
   transform: rotate(0) scale(1.05);
   z-index: 10;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 15px 35px rgb(0, 0, 0);
 }
 
 .tiltedCardInner {
   padding: 2rem;
-  height: 100%;
+  height: 40vh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -722,28 +724,6 @@
   flex: 1;
 }
 
-.tiltedCardShine {
-  position: absolute;
-  top: -100%;
-  left: -100%;
-  width: 250%;
-  height: 250%;
-  background: linear-gradient(
-    to bottom right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.03) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transform: rotate(25deg);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.tiltedCard:hover .tiltedCardShine {
-  opacity: 1;
-  animation: shineEffect 1.5s forwards;
-}
 
 @keyframes shineEffect {
   0% {

@@ -20,8 +20,8 @@ html {
 }
 
 body {
-  font-family: var(--font-sans);
-  color: var(--color-text-primary);
+  font-family: var(--system-ui);
+  color: var(--color-text-system-ui);
   background-color: var(--color-bg-secondary);
   line-height: 1.5;
   letter-spacing: 0.02em;
@@ -33,6 +33,7 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--system-ui);
   font-weight: 600;
   letter-spacing: 0.04em;
   margin-bottom: var(--spacing-md);
@@ -829,7 +830,6 @@ input:checked + .workflow-slider:before {
   padding: 3rem 0;
   position: relative;
   overflow: hidden;
-  margin-top: 2rem;
 }
 
 .tiltedCardsContainer {
@@ -923,7 +923,7 @@ input:checked + .workflow-slider:before {
 
 .tiltedCard:hover .tiltedCardShine {
   opacity: 1;
-  animation: shineEffect 1.5s forwards;
+  animation: shineEffect 0.2s forwards;
 }
 
 @keyframes shineEffect {
