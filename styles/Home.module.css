@@ -380,7 +380,7 @@
   border-radius: 50%;
   background-color: #d70012ec;
   color: white;
-  font-size: 1.7rem;
+  font-size: 1.8rem;
   font-weight: 700;
   margin: 0 auto;
   cursor: pointer;
@@ -650,7 +650,6 @@
   padding: 3rem 0;
   position: relative;
   overflow: hidden;
-  margin-top: 2rem;
 }
 
 .tiltedCardsContainer {

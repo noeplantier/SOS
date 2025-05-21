@@ -284,7 +284,7 @@ export default function HomePage() {
               <div className={styles.heroContent}>
                 <h1 className={styles.heroTitle}>SYSTEME D'ALERTE D'URGENCE</h1>
                 <h2 className={styles.heroSubtitle}>
-                  PLATEFORME D'ALERTES CENTRALISÉES 🚨
+                  PLATEFORME D'ALERTES CENTRALISÉES 
                 </h2>
 
                 <section className={styles.sosSection}>

@@ -98,7 +98,7 @@ a {
   height: 200px;
   border-radius: 50%;
   background: #d20916;
-  margin: 0;
+  margin-bottom: -2rem;
   border: none;
   cursor: pointer;
   outline: none;
