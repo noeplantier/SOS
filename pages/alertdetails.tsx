@@ -67,27 +67,68 @@ const AlertDetails: React.FC = () => {
             </div>
           </div>
 
-          <div className={styles.actionsGrid}>
-            <div className={styles.actionCard} onClick={() => handleMethodSelection('call')}>
-              <div className={styles.actionIcon} style={{ backgroundColor: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9' }}>
-                <Phone size={24} />
+          <div className={styles.tiltedCardsContainer}>
+            <div className={`${styles.tiltedCard} ${selectedMethods.call ? styles.selected : ''}`} 
+                 onClick={() => handleMethodSelection('call')}
+                 style={{
+                   '--card-rotation': '-2deg',
+                   '--card-scale': '1',
+                   '--card-z-index': '1',
+                 } as React.CSSProperties}>
+              <div className={styles.tiltedCardInner}>
+                <div className={styles.tiltedCardIconWrapper} style={{ backgroundColor: 'rgba(14, 165, 233, 0.1)' }}>
+                  <Phone size={24} color="#0ea5e9" />
+                </div>
+                <h3 className={styles.tiltedCardTitle}>Appel</h3>
+                {selectedMethods.call && 
+                  <div className={styles.selectedIndicator}>
+                    <CheckCircle size={24} />
+                  </div>
+                }
+                <div className={styles.tiltedCardShine}></div>
               </div>
-              <div className={styles.actionTitle}>Appel Téléphonique</div>
-              {selectedMethods.call && <CheckCircle size={24} color="green" />}
             </div>
-            <div className={styles.actionCard} onClick={() => handleMethodSelection('sms')}>
-              <div className={styles.actionIcon} style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
-                <MessageSquare size={24} />
+            
+            <div className={`${styles.tiltedCard} ${selectedMethods.sms ? styles.selected : ''}`}
+                 onClick={() => handleMethodSelection('sms')}
+                 style={{
+                   '--card-rotation': '0deg',
+                   '--card-scale': '1.05',
+                   '--card-z-index': '2',
+                 } as React.CSSProperties}>
+              <div className={styles.tiltedCardInner}>
+                <div className={styles.tiltedCardIconWrapper} style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)' }}>
+                  <MessageSquare size={24} color="#f59e0b" />
+                </div>
+                <h3 className={styles.tiltedCardTitle}>SMS</h3>
+                {selectedMethods.sms && 
+                  <div className={styles.selectedIndicator}>
+                    <CheckCircle size={24} />
+                  </div>
+                }
+                <div className={styles.tiltedCardShine}></div>
               </div>
-              <div className={styles.actionTitle}>SMS</div>
-              {selectedMethods.sms && <CheckCircle size={24} color="green" />}
             </div>
-            <div className={styles.actionCard} onClick={() => handleMethodSelection('email')}>
-              <div className={styles.actionIcon} style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-                <Mail size={24} />
+            
+            <div className={`${styles.tiltedCard} ${selectedMethods.email ? styles.selected : ''}`}
+                 onClick={() => handleMethodSelection('email')}
+                 style={{
+                   '--card-rotation': '2deg',
+                   '--card-scale': '1',
+                   '--card-z-index': '1',
+                 } as React.CSSProperties}>
+              <div className={styles.tiltedCardInner}>
+                <div className={styles.tiltedCardIconWrapper} style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+                  <Mail size={24} color="#ef4444" />
+                </div>
+                <h3 className={styles.tiltedCardTitle}>Email</h3>
+                {selectedMethods.email && 
+                  <div className={styles.selectedIndicator}>
+                    <CheckCircle size={24} />
+                  </div>
+                }
+                <div className={styles.tiltedCardShine}></div>
               </div>
-              <div className={styles.actionTitle}>Email</div>
-              {selectedMethods.email && <CheckCircle size={24} color="green" />}
             </div>
           </div>
 

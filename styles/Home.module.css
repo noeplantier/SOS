@@ -664,49 +664,55 @@
   justify-content: center;
   align-items: stretch;
   gap: 1.5rem;
-  padding: 2rem 0;
-  max-width: 1200px;
-  margin: 0 auto;
-  margin-top: -2rem;
+  padding: 1.5rem 0;
+  margin: 1rem auto;
+  max-width: 900px;
   perspective: 1000px;
 }
 
 .tiltedCard {
   flex: 1;
   position: relative;
-  min-height: 280px;
+  min-height: 200px;
   border-radius: 16px;
-  background: linear-gradient(120deg, #000000, #554242);
+  background: linear-gradient(120deg, #2a2a2a, #3a3a3a);
   z-index: var(--card-z-index, 1);
   transition: all 0.4s ease-out;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  cursor: pointer;
 }
 
 .tiltedCard:hover {
   transform: rotate(0) scale(1.05);
   z-index: 10;
-  box-shadow: 0 15px 35px rgb(0, 0, 0);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.tiltedCard.selected {
+  border: 2px solid #10B981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
 }
 
 .tiltedCardInner {
-  padding: 2rem;
-  height: 40vh;
+  padding: 5rem;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: center;
+  align-items: center;
   position: relative;
   overflow: hidden;
+  text-align: center;
 }
 
 .tiltedCardIconWrapper {
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   transition: transform 0.3s ease;
 }
 
@@ -715,21 +721,48 @@
 }
 
 .tiltedCardTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0rem;
   color: white;
-  position: relative;
 }
 
-.tiltedCardDescription {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.6;
-  position: relative;
-  flex: 1;
+.tiltedCardShine {
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 250%;
+  height: 250%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(25deg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
+.tiltedCard:hover .tiltedCardShine {
+  opacity: 1;
+  animation: shineEffect 1.5s forwards;
+}
+
+.selectedIndicator {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  color: #10B981;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 @keyframes shineEffect {
   0% {
@@ -742,7 +775,6 @@
   }
 }
 
-/* Media queries pour responsivité */
 @media (max-width: 768px) {
   .tiltedCardsContainer {
     flex-direction: column;
@@ -751,8 +783,7 @@
   
   .tiltedCard {
     transform: none !important;
-    margin-bottom: 1.5rem;
-    min-height: 200px;
+    margin-bottom: 1rem;
   }
 }
 
@@ -866,7 +897,7 @@
 
 .infoItem {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-
+    margin-bottom: -3rem;
   display: flex;
   align-items: center;
   gap: 8px;
