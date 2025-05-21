@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import styles from '../styles/Home.module.css';
-import { Phone, MessageSquare, Mail, CheckCircle, X } from 'lucide-react';
+import {
+  Phone, MessageSquare, Mail, CheckCircle, ArrowLeft, AlertTriangle
+} from 'lucide-react';
 
 const AlertDetails: React.FC = () => {
   const router = useRouter();
@@ -28,17 +31,41 @@ const AlertDetails: React.FC = () => {
     if (selectedMethods.email) {
       window.location.href = 'mailto:contact@example.com?subject=Urgence&body=Message%20d%27urgence'; // Remplacez par l'email réel
     }
-    router.push('/alert');
+    router.push('/');
   };
 
   return (
-    <div className={styles.homePage}>
-      <div className={styles.mainContent}>
-        <div className={styles.sosSection}>
-          <h1 className={styles.sosTitle}>Confirmer l'envoi de l'alerte</h1>
-          <p className={styles.sosDescription}>
-            Sélectionnez les méthodes d'alerte à utiliser.
-          </p>
+    <div className={styles.alertPage}>
+      <Head>
+        <title>⚠️ CONFIRMATION D'ALERTE | Système d'Alerte d'Urgence</title>
+        <meta name="description" content="Confirmation de l'envoi de l'alerte d'urgence" />
+        <meta name="theme-color" content="#e63946" />
+      </Head>
+
+      <div className={styles.alertHeader}>
+        <button
+          className={styles.backButton}
+          onClick={() => router.push('/alert')}
+          aria-label="Retour à l'alerte"
+        >
+          <ArrowLeft size={20} />
+          <span>Retour</span>
+        </button>
+      </div>
+
+      <main className={styles.alertMain}>
+        <div className={styles.alertContainer}>
+          <div className={styles.alertIcon}>
+            <AlertTriangle size={250} color="#d70012ec" />
+          </div>
+
+          <h1 className={styles.alertTitle}>CONFIRMER L'ALERTE</h1>
+
+          <div className={styles.alertInfo}>
+            <div className={styles.infoItem}>
+              <span>Sélectionnez les méthodes d'alerte à utiliser.</span>
+            </div>
+          </div>
 
           <div className={styles.actionsGrid}>
             <div className={styles.actionCard} onClick={() => handleMethodSelection('call')}>
@@ -64,8 +91,11 @@ const AlertDetails: React.FC = () => {
             </div>
           </div>
 
+          <button className={styles.sosButton} onClick={triggerAlert}>
+            Envoyer
+          </button>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
