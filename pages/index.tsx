@@ -247,10 +247,13 @@ export default function HomePage() {
     const [isSOSPulsing, setIsSOSPulsing] = useState(false);
 
   const handleSOSClick = () => {
+    // Activer l'effet de pulsation pour le feedback visuel
     setIsSOSPulsing(true);
+    
+    // Simuler un délai court avant la navigation pour l'expérience utilisateur
     setTimeout(() => {
       setIsSOSPulsing(false);
-      router.push('/emergency');
+      router.push('/alert');
     }, 800);
   };
 

@@ -386,9 +386,7 @@
   cursor: pointer;
   position: relative;
   transition: transform 0.2s ease;
-  /* Animation améliorée */
   animation: pulse 2s infinite;
-  
   overflow: hidden;
 }
 
@@ -400,13 +398,6 @@
   width: 200%;
   height: 200%;
  
-}
-
-.sosButton:hover {
-  box-shadow: 
-    0 0 0 0 rgba(255, 0, 21, 0.7),
-    0 0 25px 15px rgba(255, 0, 21, 0.5),
-    inset 0 0 20px 5px rgba(255, 255, 255, 0.3);
 }
 
 .sosButton:active {
@@ -431,7 +422,20 @@
 @keyframes pulse {
   0% {
     box-shadow: 
-      0 0 0 0 rgba(255, 0, 21, 0.7),
+      0 0 0 0 rgba(255, 0, 21, 0),
+      0 0 20px 10px rgba(255, 0, 21, 0.4),
+      inset 0 0 15px 5px rgba(255, 255, 255, 0.2);
+  }
+  20% {
+    box-shadow: 
+      0 0 0 0 rgba(255, 0, 21, 0),
+      0 0 20px 10px rgba(255, 0, 21, 0.4),
+      inset 0 0 15px 5px rgba(255, 255, 255, 0.2);
+  }
+
+  30% {
+    box-shadow: 
+      0 0 0 0 rgba(255, 0, 21, 0),
       0 0 20px 10px rgba(255, 0, 21, 0.4),
       inset 0 0 15px 5px rgba(255, 255, 255, 0.2);
   }
@@ -746,5 +750,273 @@
     transform: none !important;
     margin-bottom: 1.5rem;
     min-height: 200px;
+  }
+}
+
+.alertPage {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: white;
+  padding: 20px;
+}
+
+.alertHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 40px;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.backButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.alertTimer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.alertMain {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.alertContainer {
+  max-width: 700px;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.alertIcon {
+  margin-bottom: 20px;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.alertTitle {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #e63946;
+}
+
+.alertStatus {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  padding: 8px 16px;
+  background-color: rgba(230, 57, 70, 0.2);
+  border-radius: 20px;
+}
+
+.statusPulse {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #e63946;
+}
+
+.statusPulse.active {
+  animation: pulse 1.5s infinite;
+}
+
+.alertInfo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 10px 15px;
+  border-radius: 30px;
+}
+
+.alertProgress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.stepIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.stepIcon.current {
+  background-color: #e63946;
+  color: white;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.3);
+}
+
+.stepIcon.completed {
+  background-color: #2a9d8f;
+  color: white;
+}
+
+.stepLabel {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.progressLine {
+  flex: 1;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 1;
+  margin: 0 -10px;
+  margin-top: -20px;
+}
+
+.alertMessage {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.completeMessage {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkIcon {
+  color: #2a9d8f;
+}
+
+.alertActions {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.primaryAction, .secondaryAction {
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.primaryAction {
+  background-color: #e63946;
+  color: white;
+}
+
+.primaryAction:hover {
+  background-color: #d62f3c;
+}
+
+.secondaryAction {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.secondaryAction:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  .alertTitle {
+    font-size: 22px;
+  }
+  
+  .alertProgress {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .progressLine {
+    width: 3px;
+    height: 20px;
+    margin: 0;
+  }
+  
+  .progressStep {
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 15px;
+  }
+  
+  .stepIcon {
+    margin-bottom: 0;
+  }
+  
+  .infoItem {
+    width: 100%;
+    justify-content: center;
   }
 }
