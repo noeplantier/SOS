@@ -34,6 +34,9 @@ const AlertDetails: React.FC = () => {
     router.push('/');
   };
 
+  // Vérifier si au moins une méthode est sélectionnée
+  const hasMethodSelected = Object.values(selectedMethods).some(Boolean);
+
   return (
     <div className={styles.alertPage}>
       <Head>
@@ -61,13 +64,19 @@ const AlertDetails: React.FC = () => {
 
           <h1 className={styles.alertTitle}>CONFIRMER L'ALERTE</h1>
 
-          <div className={styles.alertInfo}>
-            <div className={styles.infoItem}>
-              <span>Sélectionnez les méthodes d'alerte à utiliser.</span>
-            </div>
-          </div>
+          <p className={styles.alertInstructions}>
+            Sélectionnez les méthodes de contact pour l'envoi de votre alerte :
+          </p>
 
-          <div className={styles.tiltedCardsContainer}>
+          {/* Container des cartes centré avec style inline pour démonstration */}
+          <div className={styles.tiltedCardsContainer} style={{
+            display: 'flex',
+            flexDirection: 'row',
+            maxWidth: '900px',
+            justifyContent: 'center',
+            padding: '1rem 1rem'
+          }}>
+            
             <div className={`${styles.tiltedCard} ${selectedMethods.call ? styles.selected : ''}`} 
                  onClick={() => handleMethodSelection('call')}
                  style={{
@@ -132,8 +141,12 @@ const AlertDetails: React.FC = () => {
             </div>
           </div>
 
-          <button className={styles.sosButton} onClick={triggerAlert}>
-            Envoyer
+          <button 
+            className={`${styles.sosButton} ${!hasMethodSelected ? styles.disabled : ''}`}
+            onClick={triggerAlert}
+            disabled={!hasMethodSelected}
+          >
+            {hasMethodSelected ? 'Envoyer' : 'Envoyer'}
           </button>
         </div>
       </main>
