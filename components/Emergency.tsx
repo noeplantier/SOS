@@ -15,7 +15,8 @@ import ReactFlow, {
   addEdge, 
   useNodesState, 
   useEdgesState,
-  Panel
+  Panel,
+  ReactFlowInstance
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -471,8 +472,10 @@ const DnDFlow = ({ setReactFlowInstance }) => {
     docker: '',
     techIcon: 'default'
   });
-  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, nodeId: null });
 
+
+  
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, nodeId: null });
   const onConnect = (params) => setEdges((eds) => addEdge(params, eds));
   
   const onNodeClick = (event, node) => {
@@ -536,6 +539,9 @@ const DnDFlow = ({ setReactFlowInstance }) => {
   };
 
   const saveNodeChanges = () => {
+    // Early return if selectedNode is null
+    if (!selectedNode) return;
+    
     const detectedTech = editMode === 'code' ? detectTechnology(nodeFormData.code) : 
                          editMode === 'json' ? 'database' : 
                          editMode === 'docker' ? 'docker' : nodeFormData.techIcon || 'default';
@@ -568,6 +574,7 @@ const DnDFlow = ({ setReactFlowInstance }) => {
     closeContextMenu();
   };
 
+  
   // When clicking outside the context menu, close it
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -806,10 +813,14 @@ const EmergencyPage: React.FC = () => {
   // État pour les positions automatiques sur le flowchart
   const [nodeCounter, setNodeCounter] = useState(4); // Commencer après les nodes initiales
   const [lastPosition, setLastPosition] = useState({ x: 200, y: 200 });
-  
   // Référence au composant ReactFlow pour accéder à ses méthodes
   const reactFlowWrapper = useRef(null);
-  const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+  const nodesSetter = useRef<((updater: (nodes: any) => any[]) => void) | null>(null);
+  const provideNodesSetter = useCallback((setter) => {
+    nodesSetter.current = setter;
+  }, []);
+  
 
   const addBlock = (type: string, techIcon = 'default') => {
     const newBlock = {
@@ -834,7 +845,7 @@ const EmergencyPage: React.FC = () => {
     setLastPosition(newPos);
     
     // Si on est en vue flowchart, ajouter le node directement
-    if (viewMode === 'flow' && reactFlowInstance) {
+    if (viewMode === 'flow' && reactFlowInstance && nodesSetter.current) {
       // Créer un nouveau node pour le flowchart
       const newFlowNode = {
         id: `node-${nodeCounter}`,
@@ -849,9 +860,9 @@ const EmergencyPage: React.FC = () => {
         type: 'custom'
       };
       
-      // Ajouter le node au flowchart
-      setNodes(nodes => [...nodes, newFlowNode]);
+       nodesSetter.current(nodes => [...nodes, newFlowNode]);
       setNodeCounter(prev => prev + 1);
+      
       
       // Optionnellement, centrer la vue sur le nouveau node
       if (reactFlowInstance) {
@@ -1052,7 +1063,9 @@ const EmergencyPage: React.FC = () => {
             {viewMode === 'flow' ? (
               <ReactFlowProvider>
                 <div style={{ width: '100%', height: '100%' }} ref={reactFlowWrapper}>
-                  <DnDFlow setReactFlowInstance={setReactFlowInstance} />
+                  <DnDFlow
+                   setReactFlowInstance={setReactFlowInstance}
+                                 provideNodesSetter={provideNodesSetter} />
                 </div>
               </ReactFlowProvider>
             ) : (
