@@ -422,10 +422,7 @@ export default function HomePage() {
           <section className={styles.alertsSection}>
             <div className={styles.container}>
               <div className={styles.sectionHeader}>
-                <h2 className={styles.sectionTitle}>Alertes récentes</h2>
-                <button className={styles.viewAllButton}>
-                  Voir toutes <ArrowRight size={16} />
-                </button>
+               
               </div>
               
               <div className={styles.alertsList}>

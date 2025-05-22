@@ -6,7 +6,7 @@ import styled from 'styled-components';
 import { 
   Bell, Mail, Phone, User, AlertTriangle, PlusCircle, Edit, Code, Save, 
   Trash, X, FilePlus, Settings, Database, Server, Cloud, FileCode,
-  Monitor, Layers, Globe, Package, CheckCircle
+  Monitor, Layers, Globe, Package, CheckCircle, Link
 } from 'lucide-react';
 import ReactFlow, { 
   Background, 
@@ -16,7 +16,10 @@ import ReactFlow, {
   useNodesState, 
   useEdgesState,
   Panel,
-  ReactFlowInstance
+  ReactFlowInstance,
+  getBezierPath,
+  ConnectionLineType,
+  MarkerType
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -62,12 +65,12 @@ const SidebarButton = styled.button`
   padding: 10px 15px;
   border-radius: 4px;
   cursor: pointer;
-  margin-top: 15px; /* Augmenter l'espacement vertical */
+  margin-top: 15px;
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* Aligner à gauche au lieu de center */
-  gap: 8px; /* Espace entre l'icône et le texte */
+  justify-content: flex-start;
+  gap: 8px;
   transition: background-color 0.2s, transform 0.2s;
   &:hover {
     background-color: #7a0b11;
@@ -131,6 +134,11 @@ const Button = styled.button`
   cursor: pointer;
   margin-top: 10px;
   width: 100%;
+  &:disabled {
+    background-color: #6a0a10;
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
 `;
 
 const Input = styled.input`
@@ -139,6 +147,8 @@ const Input = styled.input`
   margin: 5px 0;
   border-radius: 4px;
   border: 1px solid #ccc;
+  background-color: #333;
+  color: white;
 `;
 
 const Textarea = styled.textarea`
@@ -149,6 +159,8 @@ const Textarea = styled.textarea`
   border: 1px solid #ccc;
   min-height: 100px;
   font-family: monospace;
+  background-color: #333;
+  color: white;
 `;
 
 const Modal = styled.div`
@@ -191,6 +203,8 @@ const TabContainer = styled.div`
   display: flex;
   margin-bottom: 15px;
   border-bottom: 1px solid #444;
+  overflow-x: auto;
+  flex-wrap: wrap;
 `;
 
 const Tab = styled.button<{ active: boolean }>`
@@ -201,6 +215,7 @@ const Tab = styled.button<{ active: boolean }>`
   cursor: pointer;
   margin-right: 5px;
   border-radius: 4px 4px 0 0;
+  white-space: nowrap;
 `;
 
 const NodeContextMenu = styled.div`
@@ -269,6 +284,29 @@ const TechBadge = styled.div`
   margin-right: 5px;
 `;
 
+const LanguageBadgeContainer = styled.div`
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+`;
+
+const LanguageBadge = styled.div<{ color: string }>`
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background-color: ${props => props.color};
+`;
+
+const ConnectionBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  margin-top: 10px;
+  opacity: 0.7;
+`;
+
 const IconSelector = styled.div`
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -311,15 +349,54 @@ const ToggleButton = styled.button<{ active: boolean }>`
   }
 `;
 
+const ConnectionList = styled.div`
+  background-color: #333;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-top: 10px;
+`;
+
+const ConnectionItem = styled.div`
+  padding: 5px 0;
+  border-bottom: 1px solid #444;
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const ConnectionTarget = styled.div`
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+`;
+
+const ConnectionDescription = styled.div`
+  font-size: 12px;
+  opacity: 0.7;
+  margin-left: 20px;
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 8px;
+  background-color: #333;
+  color: white;
+  border: 1px solid #555;
+  border-radius: 4px;
+  margin-top: 10px;
+`;
+
 const initialNodes = [
-  { id: '1', position: { x: 0, y: 0 }, data: { label: 'Nuclear Alert', type: 'Nuclear Alert', code: '', content: '' }, type: 'custom' },
-  { id: '2', position: { x: 200, y: 100 }, data: { label: 'Notify Team', type: 'Notify Team', code: '', content: '' }, type: 'custom' },
-  { id: '3', position: { x: 400, y: 200 }, data: { label: 'Evacuate Area', type: 'Evacuate Area', code: '', content: '' }, type: 'custom' },
+  { id: '1', position: { x: 0, y: 0 }, data: { label: 'Nuclear Alert', type: 'Nuclear Alert', content: '', connections: [] }, type: 'custom' },
+  { id: '2', position: { x: 200, y: 100 }, data: { label: 'Notify Team', type: 'Notify Team', content: '', connections: [] }, type: 'custom' },
+  { id: '3', position: { x: 400, y: 200 }, data: { label: 'Evacuate Area', type: 'Evacuate Area', content: '', connections: [] }, type: 'custom' },
 ];
 
 const initialEdges = [
-  { id: 'e1-2', source: '1', target: '2' },
-  { id: 'e2-3', source: '2', target: '3' },
+  { id: 'e1-2', source: '1', target: '2', animated: true, label: 'Automatic alert', style: { stroke: '#9c0d17', strokeWidth: 2 } },
+  { id: 'e2-3', source: '2', target: '3', animated: true, label: 'Evacuation order', style: { stroke: '#9c0d17', strokeWidth: 2 } },
 ];
 
 let id = 0;
@@ -329,7 +406,9 @@ const getId = () => `dndnode_${id++}`;
 const technologyIcons = {
   default: Settings,
   javascript: Code,
+  typescript: FileCode,
   python: FileCode,
+  rust: Package,
   docker: Package,
   kubernetes: Cloud,
   database: Database,
@@ -344,11 +423,20 @@ const detectTechnology = (code) => {
   if (!code) return 'default';
   
   const lowerCode = code.toLowerCase();
-  if (lowerCode.includes('import react') || lowerCode.includes('const ') || lowerCode.includes('function(') || lowerCode.includes('=>')) {
+  if (lowerCode.includes('interface ') || lowerCode.includes('type ') || 
+      (lowerCode.includes('<') && lowerCode.includes('>') && lowerCode.includes(':'))) {
+    return 'typescript';
+  }
+  if (lowerCode.includes('import react') || lowerCode.includes('const ') || 
+      lowerCode.includes('function(') || lowerCode.includes('=>')) {
     return 'javascript';
   }
   if (lowerCode.includes('import ') && lowerCode.includes('def ') || lowerCode.includes('print(')) {
     return 'python';
+  }
+  if (lowerCode.includes('fn ') || lowerCode.includes('pub struct') || 
+      lowerCode.includes('impl') || lowerCode.includes('mut')) {
+    return 'rust';
   }
   if (lowerCode.includes('public class') || lowerCode.includes('public static void')) {
     return 'java';
@@ -366,9 +454,19 @@ const detectTechnology = (code) => {
   return 'default';
 };
 
+// Définir les couleurs pour les badges de langage
+const languageColors = {
+  typescript: 'rgba(0, 122, 204, 0.3)',
+  javascript: 'rgba(241, 191, 38, 0.3)',
+  python: 'rgba(55, 118, 171, 0.3)',
+  rust: 'rgba(183, 65, 14, 0.3)',
+  docker: 'rgba(34, 134, 195, 0.3)',
+  json: 'rgba(86, 182, 194, 0.3)'
+};
+
 // Composant de nœud personnalisé avec une grande icône
 const CustomNodeComponent = ({ data, id, isConnectable }) => {
-  const techType = data.techIcon || detectTechnology(data.code);
+  const techType = data.techIcon || 'default';
   const TechIcon = technologyIcons[techType] || technologyIcons['default'];
   
   // Déterminer l'icône principale en fonction du type
@@ -377,6 +475,16 @@ const CustomNodeComponent = ({ data, id, isConnectable }) => {
   else if (data.type === 'Notify Team') MainIcon = Bell;
   else if (data.type === 'Evacuate Area') MainIcon = User;
   else MainIcon = TechIcon;
+
+  // Vérifier quels langages sont utilisés
+  const hasTypeScript = data.typescript && data.typescript.trim() !== '';
+  const hasJavaScript = data.javascript && data.javascript.trim() !== '';
+  const hasPython = data.python && data.python.trim() !== '';
+  const hasRust = data.rust && data.rust.trim() !== '';
+  const hasJson = data.json && data.json.trim() !== '';
+  
+  // Calculer le nombre de connexions
+  const connectionCount = data.connections ? data.connections.length : 0;
 
   return (
     <div style={{
@@ -415,7 +523,7 @@ const CustomNodeComponent = ({ data, id, isConnectable }) => {
         gap: '5px' 
       }}>
         {data.label}
-        {data.techIcon !== 'default' && (
+        {techType !== 'default' && (
           <TechIcon size={14} style={{ opacity: 0.7 }} />
         )}
       </div>
@@ -436,8 +544,67 @@ const CustomNodeComponent = ({ data, id, isConnectable }) => {
         </div>
       )}
       
-      {/* Indicateur de code si disponible */}
-      {data.code && (
+      {/* Indicateur des langages utilisés */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '6px', 
+        flexWrap: 'wrap',
+        justifyContent: 'center'
+      }}>
+        {hasTypeScript && (
+          <div style={{ 
+            fontSize: '10px', 
+            padding: '3px 6px', 
+            borderRadius: '4px', 
+            backgroundColor: languageColors.typescript
+          }}>
+            TS
+          </div>
+        )}
+        {hasJavaScript && (
+          <div style={{ 
+            fontSize: '10px', 
+            padding: '3px 6px', 
+            borderRadius: '4px', 
+            backgroundColor: languageColors.javascript
+          }}>
+            JS
+          </div>
+        )}
+        {hasPython && (
+          <div style={{ 
+            fontSize: '10px', 
+            padding: '3px 6px', 
+            borderRadius: '4px', 
+            backgroundColor: languageColors.python
+          }}>
+            PY
+          </div>
+        )}
+        {hasRust && (
+          <div style={{ 
+            fontSize: '10px', 
+            padding: '3px 6px', 
+            borderRadius: '4px', 
+            backgroundColor: languageColors.rust
+          }}>
+            RS
+          </div>
+        )}
+        {hasJson && (
+          <div style={{ 
+            fontSize: '10px', 
+            padding: '3px 6px', 
+            borderRadius: '4px', 
+            backgroundColor: languageColors.json
+          }}>
+            JSON
+          </div>
+        )}
+      </div>
+      
+      {/* Indicateur de connexions */}
+      {connectionCount > 0 && (
         <div style={{ 
           fontSize: '11px',
           display: 'flex',
@@ -445,10 +612,47 @@ const CustomNodeComponent = ({ data, id, isConnectable }) => {
           gap: '5px',
           opacity: 0.7
         }}>
-          <Code size={12} /> Code disponible
+          <Link size={12} /> {connectionCount} connexion{connectionCount > 1 ? 's' : ''}
         </div>
       )}
     </div>
+  );
+};
+
+// Composant pour les bords de connexion personnalisés
+const CustomEdge = ({ id, source, target, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, data, label }) => {
+  const edgePath = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  });
+
+  return (
+    <>
+      <path
+        id={id}
+        style={{ ...style }}
+        className="react-flow__edge-path"
+        d={edgePath}
+        markerEnd={MarkerType.ArrowClosed}
+      />
+      {label && (
+        <text>
+          <textPath
+            href={`#${id}`}
+            style={{ fontSize: 12, fill: 'white', fontWeight: 'bold' }}
+            startOffset="50%"
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            {label}
+          </textPath>
+        </text>
+      )}
+    </>
   );
 };
 
@@ -456,38 +660,134 @@ const nodeTypes = {
   custom: CustomNodeComponent,
 };
 
+const edgeTypes = {
+  custom: CustomEdge,
+};
+
 // Composant DnDFlow amélioré
-const DnDFlow = ({ setReactFlowInstance }) => {
+const DnDFlow = ({ setReactFlowInstance, provideNodesSetter }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editMode, setEditMode] = useState('basic'); // 'basic', 'code', 'json', 'docker'
+  const [editMode, setEditMode] = useState('basic'); // 'basic', 'typescript', 'javascript', 'python', 'rust'
   const [nodeFormData, setNodeFormData] = useState({
     label: '',
     type: '',
     content: '',
-    code: '',
+    typescript: '',
+    javascript: '',
+    python: '',
+    rust: '',
     json: '',
     docker: '',
-    techIcon: 'default'
+    techIcon: 'default',
+    connections: []
   });
-
-
-  
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, nodeId: null });
-  const onConnect = (params) => setEdges((eds) => addEdge(params, eds));
-  
+  const [showConnectionModal, setShowConnectionModal] = useState(false);
+  const [availableTargets, setAvailableTargets] = useState([]);
+  const [selectedTarget, setSelectedTarget] = useState('');
+  const [connectionDescription, setConnectionDescription] = useState('');
+
+  // Fournir setNodes au parent via useEffect
+  useEffect(() => {
+    if (provideNodesSetter) {
+      provideNodesSetter(setNodes);
+    }
+  }, [provideNodesSetter]);
+
+  const onConnect = useCallback((params) => {
+    // Ajouter un ID unique à la connexion et stocker des métadonnées
+    const edgeWithMetadata = {
+      ...params,
+      id: `e${params.source}-${params.target}`,
+      type: 'custom',
+      animated: true,
+      label: 'Connexion',
+      style: { stroke: '#9c0d17', strokeWidth: 2 }
+    };
+    
+    setEdges((eds) => addEdge(edgeWithMetadata, eds));
+    
+    // Mettre à jour les informations de connexion dans les nœuds
+    setNodes((nds) => 
+      nds.map((node) => {
+        if (node.id === params.source) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              connections: [...(node.data.connections || []), {
+                target: params.target,
+                description: 'Connexion'
+              }]
+            }
+          };
+        }
+        return node;
+      })
+    );
+  }, [setEdges, setNodes]);
+
+  // Fonction pour ajouter une connexion avec description
+  const addConnection = useCallback(() => {
+    if (!selectedNode || !selectedTarget) return;
+    
+    // Créer une nouvelle connexion avec description
+    const connection = {
+      id: `e${selectedNode.id}-${selectedTarget}`,
+      source: selectedNode.id,
+      target: selectedTarget,
+      type: 'custom',
+      animated: true,
+      label: connectionDescription || 'Connexion',
+      style: { stroke: '#9c0d17', strokeWidth: 2 }
+    };
+    
+    // Ajouter à la liste des edges
+    setEdges((eds) => [...eds, connection]);
+    
+    // Mettre à jour les informations de connexion dans le nœud source
+    setNodes((nds) => 
+      nds.map((node) => {
+        if (node.id === selectedNode.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              connections: [...(node.data.connections || []), {
+                target: selectedTarget,
+                description: connectionDescription || 'Connexion'
+              }]
+            }
+          };
+        }
+        return node;
+      })
+    );
+    
+    // Fermer le modal
+    setShowConnectionModal(false);
+    setConnectionDescription('');
+    setSelectedTarget('');
+  }, [selectedNode, selectedTarget, connectionDescription, setEdges, setNodes]);
+
   const onNodeClick = (event, node) => {
     setSelectedNode(node);
+    setIsEditing(true);
     setNodeFormData({
       label: node.data.label,
       type: node.data.type || '',
       content: node.data.content || '',
-      code: node.data.code || '',
+      typescript: node.data.typescript || '',
+      javascript: node.data.javascript || '',
+      python: node.data.python || '',
+      rust: node.data.rust || '',
       json: node.data.json || '',
       docker: node.data.docker || '',
-      techIcon: node.data.techIcon || 'default'
+      techIcon: node.data.techIcon || detectTechnology(node.data.code) || 'default',
+      connections: node.data.connections || []
     });
   };
 
@@ -516,13 +816,36 @@ const DnDFlow = ({ setReactFlowInstance }) => {
           label: node.data.label,
           type: node.data.type || '',
           content: node.data.content || '',
-          code: node.data.code || '',
+          typescript: node.data.typescript || '',
+          javascript: node.data.javascript || '',
+          python: node.data.python || '',
+          rust: node.data.rust || '',
           json: node.data.json || '',
           docker: node.data.docker || '',
-          techIcon: node.data.techIcon || 'default'
+          techIcon: node.data.techIcon || 'default',
+          connections: node.data.connections || []
         });
         setIsEditing(true);
         setEditMode('basic');
+      }
+    }
+    closeContextMenu();
+  };
+
+  // Nouvelle option dans le menu contextuel pour ajouter une connexion
+  const showAddConnection = () => {
+    if (contextMenu.nodeId) {
+      const node = nodes.find(n => n.id === contextMenu.nodeId);
+      if (node) {
+        setSelectedNode(node);
+        
+        // Filtrer les nœuds disponibles (tous sauf le nœud courant)
+        const targets = nodes
+          .filter(n => n.id !== contextMenu.nodeId)
+          .map(n => ({ id: n.id, label: n.data.label }));
+        
+        setAvailableTargets(targets);
+        setShowConnectionModal(true);
       }
     }
     closeContextMenu();
@@ -542,9 +865,22 @@ const DnDFlow = ({ setReactFlowInstance }) => {
     // Early return if selectedNode is null
     if (!selectedNode) return;
     
-    const detectedTech = editMode === 'code' ? detectTechnology(nodeFormData.code) : 
-                         editMode === 'json' ? 'database' : 
-                         editMode === 'docker' ? 'docker' : nodeFormData.techIcon || 'default';
+    // Déterminer l'icône technologique en fonction du mode d'édition
+    let detectedTech = nodeFormData.techIcon || 'default';
+    
+    if (editMode === 'typescript' && nodeFormData.typescript) {
+      detectedTech = 'typescript';
+    } else if (editMode === 'javascript' && nodeFormData.javascript) {
+      detectedTech = 'javascript';
+    } else if (editMode === 'python' && nodeFormData.python) {
+      detectedTech = 'python';
+    } else if (editMode === 'rust' && nodeFormData.rust) {
+      detectedTech = 'rust';
+    } else if (editMode === 'json' && nodeFormData.json) {
+      detectedTech = 'database';
+    } else if (editMode === 'docker' && nodeFormData.docker) {
+      detectedTech = 'docker';
+    }
     
     setNodes(nds => 
       nds.map(node => {
@@ -556,10 +892,14 @@ const DnDFlow = ({ setReactFlowInstance }) => {
               label: nodeFormData.label,
               type: nodeFormData.type,
               content: nodeFormData.content,
-              code: nodeFormData.code,
+              typescript: nodeFormData.typescript,
+              javascript: nodeFormData.javascript,
+              python: nodeFormData.python,
+              rust: nodeFormData.rust,
               json: nodeFormData.json,
               docker: nodeFormData.docker,
-              techIcon: nodeFormData.techIcon || detectedTech
+              techIcon: detectedTech,
+              connections: nodeFormData.connections
             }
           };
         }
@@ -574,7 +914,6 @@ const DnDFlow = ({ setReactFlowInstance }) => {
     closeContextMenu();
   };
 
-  
   // When clicking outside the context menu, close it
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -596,10 +935,14 @@ const DnDFlow = ({ setReactFlowInstance }) => {
         label: `${type}`, 
         type: type,
         content: '',
-        code: '',
+        typescript: '',
+        javascript: '',
+        python: '',
+        rust: '',
         json: '',
         docker: '',
-        techIcon: 'default'
+        techIcon: 'default',
+        connections: []
       },
       type: 'custom'
     };
@@ -655,7 +998,9 @@ const DnDFlow = ({ setReactFlowInstance }) => {
         onDrop={onDrop}
         onDragOver={onDragOver}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onInit={onInit}
+        connectionLineType={ConnectionLineType.Bezier}
         fitView
       >
         <Background />
@@ -665,6 +1010,7 @@ const DnDFlow = ({ setReactFlowInstance }) => {
         </Panel>
       </ReactFlow>
       
+      {/* Menu contextuel avec option pour ajouter une connexion */}
       {contextMenu.visible && (
         <NodeContextMenu 
           style={{ 
@@ -676,23 +1022,70 @@ const DnDFlow = ({ setReactFlowInstance }) => {
           <ContextMenuItem onClick={editNode}>
             <Edit size={14} /> Edit Node
           </ContextMenuItem>
+          <ContextMenuItem onClick={showAddConnection}>
+            <Link size={14} /> Add Connection
+          </ContextMenuItem>
           <ContextMenuItem onClick={deleteNode}>
             <Trash size={14} /> Delete Node
           </ContextMenuItem>
         </NodeContextMenu>
       )}
       
+      {/* Modal pour ajouter une connexion */}
+      {showConnectionModal && (
+        <Modal onClick={() => setShowConnectionModal(false)}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <CloseButton onClick={() => setShowConnectionModal(false)}>
+              <X />
+            </CloseButton>
+            <Title>Add Connection</Title>
+            
+            <label>Connect {selectedNode?.data?.label} to:</label>
+            <Select 
+              value={selectedTarget}
+              onChange={(e) => setSelectedTarget(e.target.value)}
+            >
+              <option value="">Select a target node</option>
+              {availableTargets.map(target => (
+                <option key={target.id} value={target.id}>
+                  {target.label}
+                </option>
+              ))}
+            </Select>
+            
+            <label style={{ marginTop: '15px' }}>Connection Description:</label>
+            <Input 
+              value={connectionDescription}
+              onChange={(e) => setConnectionDescription(e.target.value)}
+              placeholder="Describe this connection..."
+            />
+            
+            <Button 
+              onClick={addConnection}
+              disabled={!selectedTarget}
+              style={{ opacity: !selectedTarget ? 0.6 : 1 }}
+            >
+              <Link size={16} style={{ marginRight: '8px' }} /> Connect Nodes
+            </Button>
+          </ModalContent>
+        </Modal>
+      )}
+      
+      {/* Modal d'édition avec onglets pour différents langages */}
       {isEditing && selectedNode && (
         <Modal onClick={() => setIsEditing(false)}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <CloseButton onClick={() => setIsEditing(false)}>
               <X />
             </CloseButton>
-            <Title>Edit Node</Title>
+            <Title>Edit Node: {selectedNode.data.label}</Title>
             
             <TabContainer>
               <Tab active={editMode === 'basic'} onClick={() => setEditMode('basic')}>Basic</Tab>
-              <Tab active={editMode === 'code'} onClick={() => setEditMode('code')}>Code</Tab>
+              <Tab active={editMode === 'typescript'} onClick={() => setEditMode('typescript')}>TypeScript</Tab>
+              <Tab active={editMode === 'javascript'} onClick={() => setEditMode('javascript')}>JavaScript</Tab>
+              <Tab active={editMode === 'python'} onClick={() => setEditMode('python')}>Python</Tab>
+              <Tab active={editMode === 'rust'} onClick={() => setEditMode('rust')}>Rust</Tab>
               <Tab active={editMode === 'json'} onClick={() => setEditMode('json')}>JSON</Tab>
               <Tab active={editMode === 'docker'} onClick={() => setEditMode('docker')}>Docker</Tab>
             </TabContainer>
@@ -724,21 +1117,80 @@ const DnDFlow = ({ setReactFlowInstance }) => {
                   ))}
                 </IconSelector>
                 
-                <label>Content</label>
+                <label>Description</label>
                 <Textarea 
                   value={nodeFormData.content} 
                   onChange={(e) => setNodeFormData({...nodeFormData, content: e.target.value})} 
+                  placeholder="Enter a description for this node..."
+                />
+                
+                {/* Liste des connexions existantes */}
+                {nodeFormData.connections && nodeFormData.connections.length > 0 && (
+                  <>
+                    <label>Current Connections:</label>
+                    <ConnectionList>
+                      {nodeFormData.connections.map((conn, index) => {
+                        const targetNode = nodes.find(n => n.id === conn.target);
+                        return (
+                          <ConnectionItem key={index}>
+                            <ConnectionTarget>
+                              <Link size={14} />
+                              {targetNode?.data?.label || conn.target}
+                            </ConnectionTarget>
+                            {conn.description && <ConnectionDescription>{conn.description}</ConnectionDescription>}
+                          </ConnectionItem>
+                        );
+                      })}
+                    </ConnectionList>
+                  </>
+                )}
+              </>
+            )}
+            
+            {editMode === 'typescript' && (
+              <>
+                <label>TypeScript Code</label>
+                <Textarea 
+                  value={nodeFormData.typescript} 
+                  onChange={(e) => setNodeFormData({...nodeFormData, typescript: e.target.value})} 
+                  placeholder="// Enter TypeScript code here"
+                  style={{ fontFamily: 'monospace', minHeight: '200px' }}
                 />
               </>
             )}
             
-            {editMode === 'code' && (
+            {editMode === 'javascript' && (
               <>
                 <label>JavaScript Code</label>
                 <Textarea 
-                  value={nodeFormData.code} 
-                  onChange={(e) => setNodeFormData({...nodeFormData, code: e.target.value})} 
+                  value={nodeFormData.javascript} 
+                  onChange={(e) => setNodeFormData({...nodeFormData, javascript: e.target.value})} 
                   placeholder="// Enter JavaScript code here"
+                  style={{ fontFamily: 'monospace', minHeight: '200px' }}
+                />
+              </>
+            )}
+            
+            {editMode === 'python' && (
+              <>
+                <label>Python Code</label>
+                <Textarea 
+                  value={nodeFormData.python} 
+                  onChange={(e) => setNodeFormData({...nodeFormData, python: e.target.value})} 
+                  placeholder="# Enter Python code here"
+                  style={{ fontFamily: 'monospace', minHeight: '200px' }}
+                />
+              </>
+            )}
+            
+            {editMode === 'rust' && (
+              <>
+                <label>Rust Code</label>
+                <Textarea 
+                  value={nodeFormData.rust} 
+                  onChange={(e) => setNodeFormData({...nodeFormData, rust: e.target.value})} 
+                  placeholder="// Enter Rust code here"
+                  style={{ fontFamily: 'monospace', minHeight: '200px' }}
                 />
               </>
             )}
@@ -750,6 +1202,7 @@ const DnDFlow = ({ setReactFlowInstance }) => {
                   value={nodeFormData.json} 
                   onChange={(e) => setNodeFormData({...nodeFormData, json: e.target.value})} 
                   placeholder="// Enter JSON data here"
+                  style={{ fontFamily: 'monospace', minHeight: '200px' }}
                 />
               </>
             )}
@@ -761,6 +1214,7 @@ const DnDFlow = ({ setReactFlowInstance }) => {
                   value={nodeFormData.docker} 
                   onChange={(e) => setNodeFormData({...nodeFormData, docker: e.target.value})} 
                   placeholder="# Enter Dockerfile content or Docker commands"
+                  style={{ fontFamily: 'monospace', minHeight: '200px' }}
                 />
               </>
             )}
@@ -813,14 +1267,15 @@ const EmergencyPage: React.FC = () => {
   // État pour les positions automatiques sur le flowchart
   const [nodeCounter, setNodeCounter] = useState(4); // Commencer après les nodes initiales
   const [lastPosition, setLastPosition] = useState({ x: 200, y: 200 });
+  
   // Référence au composant ReactFlow pour accéder à ses méthodes
   const reactFlowWrapper = useRef(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const nodesSetter = useRef<((updater: (nodes: any) => any[]) => void) | null>(null);
+  
   const provideNodesSetter = useCallback((setter) => {
     nodesSetter.current = setter;
   }, []);
-  
 
   const addBlock = (type: string, techIcon = 'default') => {
     const newBlock = {
@@ -854,15 +1309,20 @@ const EmergencyPage: React.FC = () => {
           label: type,
           type: type,
           content: '',
-          code: '',
-          techIcon: techIcon
+          typescript: '',
+          javascript: '',
+          python: '',
+          rust: '',
+          json: '',
+          docker: '',
+          techIcon: techIcon,
+          connections: []
         },
         type: 'custom'
       };
       
-       nodesSetter.current(nodes => [...nodes, newFlowNode]);
+      nodesSetter.current(nodes => [...nodes, newFlowNode]);
       setNodeCounter(prev => prev + 1);
-      
       
       // Optionnellement, centrer la vue sur le nouveau node
       if (reactFlowInstance) {
@@ -1063,9 +1523,10 @@ const EmergencyPage: React.FC = () => {
             {viewMode === 'flow' ? (
               <ReactFlowProvider>
                 <div style={{ width: '100%', height: '100%' }} ref={reactFlowWrapper}>
-                  <DnDFlow
-                   setReactFlowInstance={setReactFlowInstance}
-                                 provideNodesSetter={provideNodesSetter} />
+                  <DnDFlow 
+                    setReactFlowInstance={setReactFlowInstance}
+                    provideNodesSetter={provideNodesSetter}
+                  />
                 </div>
               </ReactFlowProvider>
             ) : (
