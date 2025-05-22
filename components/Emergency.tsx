@@ -1,4 +1,3 @@
-// pages/emergency.tsx
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { DndProvider } from 'react-dnd';
@@ -7,7 +6,7 @@ import styled from 'styled-components';
 import { 
   Bell, Mail, Phone, User, AlertTriangle, PlusCircle, Edit, Code, Save, 
   Trash, X, FilePlus, Settings, Database, Server, Cloud, FileCode,
-  Monitor, Layers, Globe, Package
+  Monitor, Layers, Globe, Package, CheckCircle
 } from 'lucide-react';
 import ReactFlow, { 
   Background, 
@@ -62,14 +61,35 @@ const SidebarButton = styled.button`
   padding: 10px 15px;
   border-radius: 4px;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 15px; /* Augmenter l'espacement vertical */
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* Aligner à gauche au lieu de center */
+  gap: 8px; /* Espace entre l'icône et le texte */
+  transition: background-color 0.2s, transform 0.2s;
   &:hover {
     background-color: #7a0b11;
+    transform: translateY(-2px);
   }
+`;
+
+const SidebarSection = styled.div`
+  margin-bottom: 25px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 15px;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const SectionTitle = styled.h2`
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #f8f9fa;
+  border-left: 3px solid #9c0d17;
+  padding-left: 10px;
 `;
 
 const Block = styled.div`
@@ -291,9 +311,9 @@ const ToggleButton = styled.button<{ active: boolean }>`
 `;
 
 const initialNodes = [
-  { id: '1', position: { x: 0, y: 0 }, data: { label: 'Nuclear Alert', type: 'Nuclear Alert', code: '', content: '' } },
-  { id: '2', position: { x: 200, y: 100 }, data: { label: 'Notify Team', type: 'Notify Team', code: '', content: '' } },
-  { id: '3', position: { x: 400, y: 200 }, data: { label: 'Evacuate Area', type: 'Evacuate Area', code: '', content: '' } },
+  { id: '1', position: { x: 0, y: 0 }, data: { label: 'Nuclear Alert', type: 'Nuclear Alert', code: '', content: '' }, type: 'custom' },
+  { id: '2', position: { x: 200, y: 100 }, data: { label: 'Notify Team', type: 'Notify Team', code: '', content: '' }, type: 'custom' },
+  { id: '3', position: { x: 400, y: 200 }, data: { label: 'Evacuate Area', type: 'Evacuate Area', code: '', content: '' }, type: 'custom' },
 ];
 
 const initialEdges = [
@@ -303,9 +323,6 @@ const initialEdges = [
 
 let id = 0;
 const getId = () => `dndnode_${id++}`;
-
-
-
 
 // Map for technology icons
 const technologyIcons = {
@@ -348,36 +365,88 @@ const detectTechnology = (code) => {
   return 'default';
 };
 
+// Composant de nœud personnalisé avec une grande icône
 const CustomNodeComponent = ({ data, id, isConnectable }) => {
-  const techType = detectTechnology(data.code);
-  const TechIcon = data.techIcon ? technologyIcons[data.techIcon] : technologyIcons['default'];
+  const techType = data.techIcon || detectTechnology(data.code);
+  const TechIcon = technologyIcons[techType] || technologyIcons['default'];
+  
+  // Déterminer l'icône principale en fonction du type
+  let MainIcon;
+  if (data.type === 'Nuclear Alert') MainIcon = AlertTriangle;
+  else if (data.type === 'Notify Team') MainIcon = Bell;
+  else if (data.type === 'Evacuate Area') MainIcon = User;
+  else MainIcon = TechIcon;
 
   return (
     <div style={{
-      padding: '10px',
-      borderRadius: '3px',
-      width: 200,
-      fontSize: '12px',
+      padding: '15px',
+      borderRadius: '8px',
+      width: 250,
+      fontSize: '14px',
       color: 'white',
       textAlign: 'center',
-      backgroundColor: '#9c0d17'
+      backgroundColor: '#9c0d17',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '10px'
     }}>
-      <div className="custom-node-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
-        {data.techIcon && <TechIcon size={16} />}
-        {!data.techIcon && (
-          <>
-            {data.type === 'Nuclear Alert' && <AlertTriangle size={16} />}
-            {data.type === 'Notify Team' && <Bell size={16} />}
-            {data.type === 'Evacuate Area' && <User size={16} />}
-            {data.type === 'Custom' && <Settings size={16} />}
-          </>
+      {/* Grande icône en haut */}
+      <div style={{ 
+        width: '60px', 
+        height: '60px', 
+        borderRadius: '50%', 
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <MainIcon size={36} color="white" />
+      </div>
+      
+      {/* Titre avec technologie */}
+      <div style={{ 
+        fontWeight: 'bold',
+        fontSize: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '5px' 
+      }}>
+        {data.label}
+        {data.techIcon !== 'default' && (
+          <TechIcon size={14} style={{ opacity: 0.7 }} />
         )}
-        <div className="custom-node-title">{data.label}</div>
       </div>
-      <div className="custom-node-body">
-        {data.content && <div>{data.content.substring(0, 50)}...</div>}
-        {data.code && <div><Code size={12} /> Has Code</div>}
-      </div>
+      
+      {/* Contenu si disponible */}
+      {data.content && (
+        <div style={{ 
+          fontSize: '12px',
+          backgroundColor: 'rgba(0,0,0,0.2)',
+          padding: '8px',
+          borderRadius: '4px',
+          width: '100%',
+          textAlign: 'left',
+          maxHeight: '80px',
+          overflow: 'auto'
+        }}>
+          {data.content.length > 100 ? `${data.content.substring(0, 100)}...` : data.content}
+        </div>
+      )}
+      
+      {/* Indicateur de code si disponible */}
+      {data.code && (
+        <div style={{ 
+          fontSize: '11px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '5px',
+          opacity: 0.7
+        }}>
+          <Code size={12} /> Code disponible
+        </div>
+      )}
     </div>
   );
 };
@@ -386,7 +455,8 @@ const nodeTypes = {
   custom: CustomNodeComponent,
 };
 
-const DnDFlow = () => {
+// Composant DnDFlow amélioré
+const DnDFlow = ({ setReactFlowInstance }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -559,6 +629,11 @@ const DnDFlow = () => {
     [setNodes]
   );
 
+  // Initialiser l'instance ReactFlow
+  const onInit = useCallback((reactFlowInstance) => {
+    setReactFlowInstance(reactFlowInstance);
+  }, [setReactFlowInstance]);
+
   return (
     <div style={{ height: '100%', width: '100%' }}>
       <ReactFlow
@@ -573,6 +648,7 @@ const DnDFlow = () => {
         onDrop={onDrop}
         onDragOver={onDragOver}
         nodeTypes={nodeTypes}
+        onInit={onInit}
         fitView
       >
         <Background />
@@ -727,6 +803,14 @@ const EmergencyPage: React.FC = () => {
     techIcon: 'default'
   });
 
+  // État pour les positions automatiques sur le flowchart
+  const [nodeCounter, setNodeCounter] = useState(4); // Commencer après les nodes initiales
+  const [lastPosition, setLastPosition] = useState({ x: 200, y: 200 });
+  
+  // Référence au composant ReactFlow pour accéder à ses méthodes
+  const reactFlowWrapper = useRef(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState(null);
+
   const addBlock = (type: string, techIcon = 'default') => {
     const newBlock = {
       id: blocks.length + 1,
@@ -740,6 +824,42 @@ const EmergencyPage: React.FC = () => {
       techIcon: techIcon
     };
     setBlocks([...blocks, newBlock]);
+    
+    // Déterminer la position pour le nouveau node dans le flowchart
+    // Décaler chaque nouveau node pour éviter les superpositions
+    const newPos = {
+      x: lastPosition.x + 100,
+      y: lastPosition.y + 75
+    };
+    setLastPosition(newPos);
+    
+    // Si on est en vue flowchart, ajouter le node directement
+    if (viewMode === 'flow' && reactFlowInstance) {
+      // Créer un nouveau node pour le flowchart
+      const newFlowNode = {
+        id: `node-${nodeCounter}`,
+        position: newPos,
+        data: { 
+          label: type,
+          type: type,
+          content: '',
+          code: '',
+          techIcon: techIcon
+        },
+        type: 'custom'
+      };
+      
+      // Ajouter le node au flowchart
+      setNodes(nodes => [...nodes, newFlowNode]);
+      setNodeCounter(prev => prev + 1);
+      
+      // Optionnellement, centrer la vue sur le nouveau node
+      if (reactFlowInstance) {
+        setTimeout(() => {
+          reactFlowInstance.fitView({ padding: 0.2 });
+        }, 50);
+      }
+    }
   };
 
   const addCustomButton = () => {
@@ -776,6 +896,8 @@ const EmergencyPage: React.FC = () => {
   };
 
   const saveCardChanges = () => {
+    if (!editingCard) return;
+    
     setBlocks(blocks.map(block => {
       if (block.id === editingCard.id) {
         return {
@@ -815,83 +937,113 @@ const EmergencyPage: React.FC = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <DashboardContainer>
+        {/* Sidebar amélioré */}
         <Sidebar>
-          <Title>Add New Card</Title>
-          <SidebarButton onClick={() => addBlock('Nuclear Alert')} 
-                         draggable 
-                         onDragStart={(event) => onDragStart(event, 'Nuclear Alert')}>
-            <PlusCircle size={16} /> Nuclear Alert
-          </SidebarButton>
-          <SidebarButton onClick={() => addBlock('Notify Team')}
-                         draggable 
-                         onDragStart={(event) => onDragStart(event, 'Notify Team')}>
-            <PlusCircle size={16} /> Notify Team
-          </SidebarButton>
-          <SidebarButton onClick={() => addBlock('Evacuate Area')}
-                         draggable 
-                         onDragStart={(event) => onDragStart(event, 'Evacuate Area')}>
-            <PlusCircle size={16} /> Evacuate Area
-          </SidebarButton>
-          
-          {/* Custom buttons */}
-          {customButtons.map(button => (
+          <SidebarSection>
+            <SectionTitle>Cartes d'urgence</SectionTitle>
             <SidebarButton 
-              key={button.id} 
-              onClick={() => addBlock(button.title, button.techIcon)}
+              onClick={() => addBlock('Nuclear Alert')} 
               draggable 
-              onDragStart={(event) => onDragStart(event, button.title)}>
-              {technologyIcons[button.techIcon] ? React.createElement(technologyIcons[button.techIcon], { size: 16 }) : <Settings size={16} />} {button.title}
+              onDragStart={(event) => onDragStart(event, 'Nuclear Alert')}
+            >
+              <AlertTriangle size={16} /> Nuclear Alert
             </SidebarButton>
-          ))}
-          
-          {/* Add new button interface */}
-          {isAddingButton ? (
-            <div style={{ marginTop: '10px' }}>
-              <Input 
-                value={newButtonName}
-                onChange={(e) => setNewButtonName(e.target.value)}
-                placeholder="Button name"
-              />
-              
-              <label style={{ marginTop: '10px', display: 'block' }}>Technology</label>
-              <IconSelector>
-                {Object.entries(technologyIcons).map(([key, IconComponent]) => (
-                  <IconOption 
-                    key={key} 
-                    selected={newButtonTech === key}
-                    onClick={() => setNewButtonTech(key)}
-                  >
-                    <IconComponent size={16} color="white" />
-                  </IconOption>
-                ))}
-              </IconSelector>
-              
-              <div style={{ display: 'flex', gap: '5px', marginTop: '5px' }}>
-                <Button onClick={addCustomButton}>Add</Button>
-                <Button onClick={() => setIsAddingButton(false)}>Cancel</Button>
-              </div>
-            </div>
-          ) : (
+            
             <SidebarButton 
-              onClick={() => setIsAddingButton(true)}
-              style={{ backgroundColor: '#444' }}>
-              <FilePlus size={16} /> Create New Card Type
+              onClick={() => addBlock('Notify Team')}
+              draggable 
+              onDragStart={(event) => onDragStart(event, 'Notify Team')}
+            >
+              <Bell size={16} /> Notify Team
             </SidebarButton>
-          )}
+            
+            <SidebarButton 
+              onClick={() => addBlock('Evacuate Area')}
+              draggable 
+              onDragStart={(event) => onDragStart(event, 'Evacuate Area')}
+            >
+              <User size={16} /> Evacuate Area
+            </SidebarButton>
+          </SidebarSection>
           
-          {/* View toggle */}
-          <div style={{ marginTop: '20px' }}>
-            <Title style={{ fontSize: '18px' }}>View Mode</Title>
+          <SidebarSection>
+            <SectionTitle>Cartes personnalisées</SectionTitle>
+            {/* Custom buttons */}
+            {customButtons.map(button => (
+              <SidebarButton 
+                key={button.id} 
+                onClick={() => addBlock(button.title, button.techIcon)}
+                draggable 
+                onDragStart={(event) => onDragStart(event, button.title)}
+              >
+                {technologyIcons[button.techIcon] 
+                  ? React.createElement(technologyIcons[button.techIcon], { size: 16 }) 
+                  : <Settings size={16} />
+                } 
+                {button.title}
+              </SidebarButton>
+            ))}
+            
+            {/* Interface d'ajout de bouton */}
+            {isAddingButton ? (
+              <div style={{ marginTop: '20px' }}>
+                <Input 
+                  value={newButtonName}
+                  onChange={(e) => setNewButtonName(e.target.value)}
+                  placeholder="Nom de la carte"
+                />
+                
+                <label style={{ marginTop: '10px', display: 'block', color: '#f8f9fa' }}>
+                  Technologie
+                </label>
+                <IconSelector>
+                  {Object.entries(technologyIcons).map(([key, IconComponent]) => (
+                    <IconOption 
+                      key={key} 
+                      selected={newButtonTech === key}
+                      onClick={() => setNewButtonTech(key)}
+                    >
+                      <IconComponent size={16} color="white" />
+                    </IconOption>
+                  ))}
+                </IconSelector>
+                
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                  <Button onClick={addCustomButton}>Ajouter</Button>
+                  <Button onClick={() => setIsAddingButton(false)}>Annuler</Button>
+                </div>
+              </div>
+            ) : (
+              <SidebarButton 
+                onClick={() => setIsAddingButton(true)}
+                style={{ backgroundColor: '#444' }}
+              >
+                <FilePlus size={16} /> Créer une nouvelle carte
+              </SidebarButton>
+            )}
+          </SidebarSection>
+          
+          {/* Section mode d'affichage */}
+          <SidebarSection>
+            <SectionTitle>Mode d'affichage</SectionTitle>
             <ViewToggle>
-              <ToggleButton active={viewMode === 'flow'} onClick={() => setViewMode('flow')}>
-                Flow Chart
-              </ToggleButton>
-              <ToggleButton active={viewMode === 'dashboard'} onClick={() => setViewMode('dashboard')}>
+              <ToggleButton 
+                active={viewMode === 'dashboard'} 
+                onClick={() => setViewMode('dashboard')}
+              >
                 Dashboard
               </ToggleButton>
+              <ToggleButton 
+                active={viewMode === 'flow'} 
+                onClick={() => setViewMode('flow')}
+              >
+                Flow Chart
+              </ToggleButton>
             </ViewToggle>
-          </div>
+          </SidebarSection>
         </Sidebar>
+
+        {/* Contenu principal */}
         <div style={{ flex: 1 }}>
           <Header>
             <Title>Emergency Workflow Dashboard</Title>
@@ -899,7 +1051,9 @@ const EmergencyPage: React.FC = () => {
           <div style={{ height: '100vh' }}>
             {viewMode === 'flow' ? (
               <ReactFlowProvider>
-                <DnDFlow />
+                <div style={{ width: '100%', height: '100%' }} ref={reactFlowWrapper}>
+                  <DnDFlow setReactFlowInstance={setReactFlowInstance} />
+                </div>
               </ReactFlowProvider>
             ) : (
               <DashboardGrid>
