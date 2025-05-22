@@ -23,6 +23,79 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
+
+// Styles pour les connexions entre cards
+const ConnectionLine = styled.div`
+  position: absolute;
+  height: 2px;
+  background-color: #9c0d17;
+  transform-origin: left center;
+  pointer-events: none;
+  z-index: 1;
+  &:after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    top: -4px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid #9c0d17;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+  }
+`;
+
+const ConnectionLabel = styled.div`
+  position: absolute;
+  background-color: rgba(156, 13, 23, 0.8);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+`;
+
+const CardContainer = styled.div`
+  position: relative;
+`;
+
+const TestButton = styled.button`
+  background-color: #38761d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  &:hover {
+    background-color: #2a5a15;
+  }
+  &:disabled {
+    background-color: #1f3d10;
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+
+// Styles pour afficher les résultats des tests
+const TestResult = styled.div<{ success: boolean }>`
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  background-color: ${props => props.success ? 'rgba(56, 118, 29, 0.2)' : 'rgba(156, 13, 23, 0.2)'};
+  border-left: 3px solid ${props => props.success ? '#38761d' : '#9c0d17'};
+  max-height: 100px;
+  overflow: auto;
+`;
+
+
 // Styles pour les blocs et le tableau de bord
 const DashboardContainer = styled.div`
   display: flex;
@@ -252,6 +325,7 @@ const Card = styled.div`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   color: white;
   position: relative;
+  z-index: 2;
 `;
 
 const CardHeader = styled.div`
@@ -665,8 +739,29 @@ const edgeTypes = {
 };
 
 // Composant DnDFlow amélioré
-const DnDFlow = ({ setReactFlowInstance, provideNodesSetter }) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+const DnDFlow =  ({ setReactFlowInstance, provideNodesSetter }) => {
+  // Define the connection type
+  interface Connection {
+    target: string;
+    description: string;
+  }
+  
+  // Define the node data type
+  interface NodeData {
+    label: string;
+    type: string;
+    content: string;
+    connections: Connection[];
+    typescript?: string;
+    javascript?: string;
+    python?: string;
+    rust?: string;
+    json?: string;
+    docker?: string;
+    techIcon?: string;
+  }
+  
+  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -684,6 +779,20 @@ const DnDFlow = ({ setReactFlowInstance, provideNodesSetter }) => {
     techIcon: 'default',
     connections: []
   });
+
+    // État pour les résultats de tests
+  const [testResults, setTestResults] = useState({});
+  const [isRunningTest, setIsRunningTest] = useState({});
+  interface CardConnection {
+    id: string;
+    source: string | number;
+    target: string | number;
+    description: string;
+  }
+  
+  const [cardConnections, setCardConnections] = useState<CardConnection[]>([]);
+
+
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, nodeId: null });
   const [showConnectionModal, setShowConnectionModal] = useState(false);
   const [availableTargets, setAvailableTargets] = useState([]);
@@ -729,6 +838,19 @@ const DnDFlow = ({ setReactFlowInstance, provideNodesSetter }) => {
       })
     );
   }, [setEdges, setNodes]);
+
+
+    // Fonction pour ajouter une connexion entre cards dans la vue dashboard
+  const addCardConnection = (source, target, description = '') => {
+    setCardConnections(prev => [...prev, { 
+      id: `card-${source}-${target}`, 
+      source, 
+      target, 
+      description 
+    }]);
+  };
+
+  
 
   // Fonction pour ajouter une connexion avec description
   const addConnection = useCallback(() => {
@@ -1376,13 +1498,13 @@ const EmergencyPage: React.FC = () => {
           title: cardFormData.title,
           message: cardFormData.message,
           code: cardFormData.code,
-          techIcon: cardFormData.techIcon
-        };
+        techIcon: cardFormData.techIcon
+          };
       }
       return block;
     }));
     
-    // Also update custom buttons if this was a custom one
+   // Also update custom buttons if this was a custom one
     const customButton = customButtons.find(btn => btn.title === editingCard.title);
     if (customButton) {
       setCustomButtons(customButtons.map(btn => {
@@ -1395,6 +1517,39 @@ const EmergencyPage: React.FC = () => {
         }
         return btn;
       }));
+    }
+    
+    // Find the corresponding node in the flowchart
+    let correspondingNode = null;
+    if (nodesSetter.current && reactFlowInstance) {
+      nodesSetter.current(nodes => {
+        const matchingNode = nodes.find(node => 
+          node.data?.label === editingCard.title || 
+          node.data?.type === editingCard.title
+        );
+        if (matchingNode) correspondingNode = matchingNode;
+        return nodes;
+      });
+    }
+    
+    // Si le titre a changé, mettre à jour le node dans le flowchart
+    if (correspondingNode && cardFormData.title !== editingCard.title) {
+      if (nodesSetter.current) {
+        nodesSetter.current(nodes => 
+          nodes.map(node => {
+            if (correspondingNode && node.id === correspondingNode.id) {
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  label: cardFormData.title
+                }
+              };
+            }
+            return node;
+          })
+        );
+      }
     }
     
     setEditingCard(null);
