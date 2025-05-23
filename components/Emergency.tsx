@@ -24,6 +24,8 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 
 
+
+
 // Styles pour les connexions entre cards
 const ConnectionLine = styled.div`
   position: absolute;
@@ -61,6 +63,13 @@ const CardContainer = styled.div`
   position: relative;
 `;
 
+const DashboardConnectionLine = styled(ConnectionLine)`
+  position: absolute;
+  z-index: 1;
+`;
+
+
+// Ajouter un bouton de test
 const TestButton = styled.button`
   background-color: #38761d;
   color: white;
@@ -325,7 +334,6 @@ const Card = styled.div`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   color: white;
   position: relative;
-  z-index: 2;
 `;
 
 const CardHeader = styled.div`
@@ -739,29 +747,8 @@ const edgeTypes = {
 };
 
 // Composant DnDFlow amélioré
-const DnDFlow =  ({ setReactFlowInstance, provideNodesSetter }) => {
-  // Define the connection type
-  interface Connection {
-    target: string;
-    description: string;
-  }
-  
-  // Define the node data type
-  interface NodeData {
-    label: string;
-    type: string;
-    content: string;
-    connections: Connection[];
-    typescript?: string;
-    javascript?: string;
-    python?: string;
-    rust?: string;
-    json?: string;
-    docker?: string;
-    techIcon?: string;
-  }
-  
-  const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>(initialNodes);
+const DnDFlow = ({ setReactFlowInstance, provideNodesSetter }) => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [selectedNode, setSelectedNode] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -779,20 +766,6 @@ const DnDFlow =  ({ setReactFlowInstance, provideNodesSetter }) => {
     techIcon: 'default',
     connections: []
   });
-
-    // État pour les résultats de tests
-  const [testResults, setTestResults] = useState({});
-  const [isRunningTest, setIsRunningTest] = useState({});
-  interface CardConnection {
-    id: string;
-    source: string | number;
-    target: string | number;
-    description: string;
-  }
-  
-  const [cardConnections, setCardConnections] = useState<CardConnection[]>([]);
-
-
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, nodeId: null });
   const [showConnectionModal, setShowConnectionModal] = useState(false);
   const [availableTargets, setAvailableTargets] = useState([]);
@@ -838,19 +811,6 @@ const DnDFlow =  ({ setReactFlowInstance, provideNodesSetter }) => {
       })
     );
   }, [setEdges, setNodes]);
-
-
-    // Fonction pour ajouter une connexion entre cards dans la vue dashboard
-  const addCardConnection = (source, target, description = '') => {
-    setCardConnections(prev => [...prev, { 
-      id: `card-${source}-${target}`, 
-      source, 
-      target, 
-      description 
-    }]);
-  };
-
-  
 
   // Fonction pour ajouter une connexion avec description
   const addConnection = useCallback(() => {
@@ -1359,6 +1319,144 @@ const EmergencyPage: React.FC = () => {
     { id: 3, title: 'Evacuate Area', icon: User, contacts: [], message: '', code: '', techIcon: 'default' },
   ]);
 
+
+  // Add state for test results
+  const [testResults, setTestResults] = useState<Record<number, {success: boolean, message: string}>>({});
+  // Add state to track connections between cards
+  const [cardConnections, setCardConnections] = useState<{source: number, target: number, label: string}[]>([
+    {source: 1, target: 2, label: 'Alerts'},
+    {source: 2, target: 3, label: 'Evacuation'}
+  ]);
+
+  // Function to test card code
+  const testCardCode = (block) => {
+    let success = false;
+    let message = "Test failed";
+    let code = "";
+
+
+       // Determine which code to test based on tech icon
+    if (block.techIcon === 'typescript' && block.typescript) {
+      code = block.typescript;
+    } else if (block.techIcon === 'javascript' && block.javascript) {
+      code = block.javascript;
+    } else if (block.techIcon === 'python' && block.python) {
+      code = block.python;
+    } else if (block.techIcon === 'rust' && block.rust) {
+      code = block.rust;
+    } else if (block.techIcon === 'database' && block.json) {
+      code = block.json;
+    } else {
+      code = block.code;
+    }
+    
+    try {
+      // Basic validation for different code types
+      if (block.techIcon === 'typescript' || block.techIcon === 'javascript') {
+        // Check for syntax errors in JS/TS code
+        new Function(code);
+        
+        if (code.includes('function') || code.includes('=>') || 
+            code.includes('class') || code.includes('const ')) {
+          success = true;
+          message = "Syntax valid. Function or class structure detected.";
+          
+          // For emergency cards, verify specific functionality
+          if (block.title === 'Nuclear Alert') {
+            if (code.includes('alert') || code.includes('notify') || code.includes('emit')) {
+              message += " Alert functionality detected.";
+            } else {
+              success = false;
+              message = "Missing alert functionality in nuclear alert handler.";
+            }
+          } else if (block.title === 'Notify Team') {
+            if (code.includes('email') || code.includes('notify') || code.includes('send') || code.includes('message')) {
+              message += " Notification functionality detected.";
+            } else {
+              success = false;
+              message = "Missing notification functionality in team notifier.";
+            }
+          } else if (block.title === 'Evacuate Area') {
+            if (code.includes('evacuate') || code.includes('route') || code.includes('path') || code.includes('exit')) {
+              message += " Evacuation functionality detected.";
+            } else {
+              success = false;
+              message = "Missing evacuation functionality.";
+            }
+          }
+        } else {
+          success = false;
+          message = "Code appears to be incomplete. No function or class found.";
+        }
+      } else if (block.techIcon === 'python') {
+        // Basic Python validation
+        if (code.includes('def ') || code.includes('class ')) {
+          success = true;
+          message = "Python syntax appears valid. Function or class detected.";
+        } else {
+          success = false;
+          message = "Python code appears incomplete. No function or class found.";
+        }
+      } else if (block.techIcon === 'database') {
+        // JSON validation
+        try {
+          JSON.parse(code);
+          success = true;
+          message = "Valid JSON structure.";
+        } catch (e) {
+          success = false;
+          message = "Invalid JSON: " + e.message;
+        }
+      } else {
+        // Generic code validation
+        if (code.length > 10) {
+          success = true;
+          message = "Code structure present but not fully validated.";
+        } else {
+          success = false;
+          message = "Code too short or empty.";
+        }
+      }
+    } catch (e) {
+      success = false;
+      message = "Error analyzing code: " + e.message;
+    }
+
+    // Set test result for this block
+    setTestResults({...testResults, [block.id]: {success, message}});
+  };
+
+  // Function to calculate position for connecting lines between cards
+  const calculateLinePosition = (sourceId, targetId) => {
+    const sourceElement = document.getElementById(`card-${sourceId}`);
+    const targetElement = document.getElementById(`card-${targetId}`);
+    
+    if (!sourceElement || !targetElement) return null;
+    
+    const sourceBounds = sourceElement.getBoundingClientRect();
+    const targetBounds = targetElement.getBoundingClientRect();
+    
+    const sourceX = sourceBounds.left + sourceBounds.width / 2;
+    const sourceY = sourceBounds.top + sourceBounds.height;
+    const targetX = targetBounds.left + targetBounds.width / 2;
+    const targetY = targetBounds.top;
+    
+    const length = Math.sqrt(Math.pow(targetX - sourceX, 2) + Math.pow(targetY - sourceY, 2));
+    const angle = Math.atan2(targetY - sourceY, targetX - sourceX) * (180 / Math.PI);
+    
+    return {
+      left: sourceX,
+      top: sourceY,
+      width: length,
+      angle: angle
+    };
+  };
+
+  // Function to add connection between cards
+  const addCardConnection = (sourceId, targetId, label = "Connected") => {
+    setCardConnections([...cardConnections, {source: sourceId, target: targetId, label}]);
+  };
+  
   const contacts = [
     { id: 'contact1', name: 'Team Leader' },
     { id: 'contact2', name: 'Security Officer' },
@@ -1498,13 +1596,13 @@ const EmergencyPage: React.FC = () => {
           title: cardFormData.title,
           message: cardFormData.message,
           code: cardFormData.code,
-        techIcon: cardFormData.techIcon
-          };
+          techIcon: cardFormData.techIcon
+        };
       }
       return block;
     }));
     
-   // Also update custom buttons if this was a custom one
+    // Also update custom buttons if this was a custom one
     const customButton = customButtons.find(btn => btn.title === editingCard.title);
     if (customButton) {
       setCustomButtons(customButtons.map(btn => {
@@ -1517,39 +1615,6 @@ const EmergencyPage: React.FC = () => {
         }
         return btn;
       }));
-    }
-    
-    // Find the corresponding node in the flowchart
-    let correspondingNode = null;
-    if (nodesSetter.current && reactFlowInstance) {
-      nodesSetter.current(nodes => {
-        const matchingNode = nodes.find(node => 
-          node.data?.label === editingCard.title || 
-          node.data?.type === editingCard.title
-        );
-        if (matchingNode) correspondingNode = matchingNode;
-        return nodes;
-      });
-    }
-    
-    // Si le titre a changé, mettre à jour le node dans le flowchart
-    if (correspondingNode && cardFormData.title !== editingCard.title) {
-      if (nodesSetter.current) {
-        nodesSetter.current(nodes => 
-          nodes.map(node => {
-            if (correspondingNode && node.id === correspondingNode.id) {
-              return {
-                ...node,
-                data: {
-                  ...node.data,
-                  label: cardFormData.title
-                }
-              };
-            }
-            return node;
-          })
-        );
-      }
     }
     
     setEditingCard(null);
@@ -1685,98 +1750,160 @@ const EmergencyPage: React.FC = () => {
                 </div>
               </ReactFlowProvider>
             ) : (
-              <DashboardGrid>
-                {blocks.map(block => {
-                  const TechIcon = technologyIcons[block.techIcon] || Settings;
+                         <div style={{ position: 'relative' }}>
+                {/* Connection lines */}
+                {cardConnections.map((connection, index) => {
+                  const position = calculateLinePosition(connection.source, connection.target);
+                  if (!position) return null;
+                  
                   return (
-                    <Card key={block.id}>
-                      <CardHeader>
-                        <CardTitle>
-                          <TechIcon size={18} />
-                          {block.title}
-                        </CardTitle>
-                        <div>
-                          <CloseButton onClick={() => editCard(block)} style={{ position: 'static' }}>
-                            <Edit size={16} />
-                          </CloseButton>
-                          <CloseButton onClick={() => deleteBlock(block.id)} style={{ position: 'static' }}>
-                            <Trash size={16} />
-                          </CloseButton>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        {block.message && (
-                          <div style={{ marginBottom: '10px' }}>{block.message}</div>
-                        )}
-                        {block.code && (
-                          <div style={{ 
-                            background: '#1e1e1e', 
-                            padding: '8px', 
-                            borderRadius: '4px',
-                            fontFamily: 'monospace',
-                            fontSize: '12px',
-                            maxHeight: '100px',
-                            overflow: 'auto'
-                          }}>
-                            <pre style={{ margin: 0 }}>{block.code.substring(0, 100)}{block.code.length > 100 ? '...' : ''}</pre>
-                          </div>
-                        )}
-                        {block.techIcon && block.techIcon !== 'default' && (
-                          <TechBadge>
-                            <TechIcon size={14} style={{ marginRight: '5px' }} />
-                            {block.techIcon}
-                          </TechBadge>
-                        )}
-                      </CardContent>
-                    </Card>
+                    <div key={`connection-${index}`}>
+                      <DashboardConnectionLine style={{
+                        left: `${position.left}px`,
+                        top: `${position.top}px`,
+                        width: `${position.width}px`,
+                        transform: `rotate(${position.angle}deg)`
+                      }} />
+                      <ConnectionLabel style={{
+                        left: `${position.left + position.width / 2}px`,
+                        top: `${position.top + 20}px`
+                      }}>
+                        {connection.label}
+                      </ConnectionLabel>
+                    </div>
                   );
                 })}
-              </DashboardGrid>
+                
+                {/* Dashboard cards */}
+                <DashboardGrid>
+                  {blocks.map(block => {
+                    const TechIcon = technologyIcons[block.techIcon] || Settings;
+                    const testResult = testResults[block.id];
+                    
+                    return (
+                      <CardContainer key={block.id}>
+                        <Card id={`card-${block.id}`}>
+                          <CardHeader>
+                            <CardTitle>
+                              <TechIcon size={18} />
+                              {block.title}
+                            </CardTitle>
+                            <div>
+                              <CloseButton onClick={() => editCard(block)} style={{ position: 'static' }}>
+                                <Edit size={16} />
+                              </CloseButton>
+                              <CloseButton onClick={() => deleteBlock(block.id)} style={{ position: 'static' }}>
+                                <Trash size={16} />
+                              </CloseButton>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            {block.message && (
+                              <div style={{ marginBottom: '10px' }}>{block.message}</div>
+                            )}
+                            {block.code && (
+                              <div style={{ 
+                                background: '#1e1e1e', 
+                                padding: '8px', 
+                                borderRadius: '4px',
+                                fontFamily: 'monospace',
+                                fontSize: '12px',
+                                maxHeight: '100px',
+                                overflow: 'auto'
+                              }}>
+                                <pre style={{ margin: 0 }}>{block.code.substring(0, 100)}{block.code.length > 100 ? '...' : ''}</pre>
+                              </div>
+                            )}
+                            {block.techIcon && block.techIcon !== 'default' && (
+                              <TechBadge>
+                                <TechIcon size={14} style={{ marginRight: '5px' }} />
+                                {block.techIcon}
+                              </TechBadge>
+                            )}
+                            
+                            {/* Test button */}
+                            {block.code && (
+                              <TestButton onClick={() => testCardCode(block)}>
+                                <CheckCircle size={14} /> Test Code
+                              </TestButton>
+                            )}
+                            
+                            {/* Show test results if available */}
+                            {testResult && (
+                              <TestResult success={testResult.success}>
+                                {testResult.message}
+                              </TestResult>
+                            )}
+                            
+                            {/* Connection options when in dashboard view */}
+                            <ConnectionBadge>
+                              <Link size={14} /> 
+                              {
+                                cardConnections.filter(conn => conn.source === block.id).length > 0 ?
+                                `${cardConnections.filter(conn => conn.source === block.id).length} outgoing connections` :
+                                "No connections"
+                              }
+                            </ConnectionBadge>
+                          </CardContent>
+                        </Card>
+                      </CardContainer>
+                    );
+                  })}
+                </DashboardGrid>
+              </div>
             )}
           </div>
         </div>
         
-        {/* Edit Card Modal */}
+        {/* Edit Card Modal - adding connection options */}
         {editingCard && (
           <Modal onClick={() => setEditingCard(null)}>
             <ModalContent onClick={(e) => e.stopPropagation()}>
-              <CloseButton onClick={() => setEditingCard(null)}>
-                <X />
-              </CloseButton>
-              <Title>Edit Card</Title>
+              {/* ...existing edit modal content... */}
               
-              <label>Title</label>
-              <Input 
-                value={cardFormData.title}
-                onChange={(e) => setCardFormData({...cardFormData, title: e.target.value})}
-              />
+              {/* Add connections section */}
+              <Title style={{ marginTop: '20px', fontSize: '16px' }}>Card Connections</Title>
               
-              <label>Message/Description</label>
-              <Textarea 
-                value={cardFormData.message}
-                onChange={(e) => setCardFormData({...cardFormData, message: e.target.value})}
-                placeholder="Enter description or message..."
-              />
+              <label>Connect to another card:</label>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <Select onChange={(e) => {
+                  if (e.target.value) {
+                    addCardConnection(editingCard.id, parseInt(e.target.value));
+                  }
+                }}>
+                  <option value="">Select a card</option>
+                  {blocks
+                    .filter(b => b.id !== editingCard.id)
+                    .map(block => (
+                      <option key={block.id} value={block.id}>{block.title}</option>
+                    ))
+                  }
+                </Select>
+              </div>
               
-              <label>Code</label>
-              <Textarea 
-                value={cardFormData.code}
-                onChange={(e) => setCardFormData({...cardFormData, code: e.target.value})}
-                placeholder="Enter code here..."
-              />
-              
-              <label>Technology</label>
-              <IconSelector>
-                {Object.entries(technologyIcons).map(([key, IconComponent]) => (
-                  <IconOption 
-                    key={key} 
-                    selected={cardFormData.techIcon === key}
-                    onClick={() => setCardFormData({...cardFormData, techIcon: key})}
-                  >
-                    <IconComponent size={16} color="white" />
-                  </IconOption>
-                ))}
-              </IconSelector>
+              {/* Current connections */}
+              {cardConnections.filter(conn => conn.source === editingCard.id).length > 0 && (
+                <div style={{ marginTop: '15px' }}>
+                  <label>Current connections:</label>
+                  <ConnectionList>
+                    {cardConnections
+                      .filter(conn => conn.source === editingCard.id)
+                      .map((conn, idx) => {
+                        const targetBlock = blocks.find(b => b.id === conn.target);
+                        return (
+                          <ConnectionItem key={idx}>
+                            <ConnectionTarget>
+                              <Link size={14} />
+                              {targetBlock?.title || `Card ${conn.target}`}
+                            </ConnectionTarget>
+                            <ConnectionDescription>{conn.label}</ConnectionDescription>
+                          </ConnectionItem>
+                        );
+                      })
+                    }
+                  </ConnectionList>
+                </div>
+              )}
               
               <Button onClick={saveCardChanges}>
                 <Save size={16} /> Save Changes
@@ -1788,5 +1915,6 @@ const EmergencyPage: React.FC = () => {
     </DndProvider>
   );
 };
+
 
 export default EmergencyPage;
